@@ -1,0 +1,324 @@
+@article{wang2020tsibble,
+  author    = {Earo Wang and Dianne Cook and Rob J Hyndman},
+  title     = {A new tidy data structure to support exploration and modeling of temporal data},
+  journal   = {Journal of Computational and Graphical Statistics},
+  volume    = {29},
+  number    = {3},
+  pages     = {466-478},
+  year      = {2020},
+  publisher = {Taylor \& Francis},
+  doi       = {10.1080/10618600.2019.1695624}
+}
+
+@Manual{oharawild2024graphvec,
+  title  = {graphvec: Vectorised graph data structures},
+  year   = {2024},
+  author = {Mitchell O'Hara-Wild},
+  note   = {R package version 0.0.0.9000},
+  url    = {http://pkg.mitchelloharawild.com/graphvec},
+}
+
+@article{girolimetto2021foreco,
+  title   = {Cross-temporal forecast reconciliation: Optimal combination method and heuristic alternatives},
+  author  = {Tommaso {Di Fonzo} and Daniele Girolimetto},
+  journal = {International Journal of Forecasting},
+  year    = {2021},
+  note    = {in press},
+  doi     = {10.1016/j.ijforecast.2021.08.004}
+}
+
+@article{hyndman2008forecast,
+  title    = {Automatic Time Series Forecasting: The forecast Package for R},
+  volume   = {27},
+  url      = {https://www.jstatsoft.org/index.php/jss/article/view/v027i03},
+  doi      = {10.18637/jss.v027.i03},
+  abstract = {Automatic forecasts of large numbers of univariate time series are often needed in business and other contexts. We describe two automatic forecasting algorithms that have been implemented in the forecast package for R. The first is based on innovations state space models that underly exponential smoothing methods. The second is a step-wise algorithm for forecasting with ARIMA models. The algorithms are applicable to both seasonal and non-seasonal data, and are compared and illustrated using four real time series. We also briefly describe some of the other functionality available in the forecast package.},
+  number   = {3},
+  journal  = {Journal of Statistical Software},
+  author   = {Hyndman, Rob J. and Khandakar, Yeasmin},
+  year     = {2008},
+  pages    = {1–22}
+}
+
+@article{besancon2021distributionsjl,
+  author   = {Mathieu Besançon and Theodore Papamarkou and David Anthoff and Alex Arslan and Simon Byrne and Dahua Lin and John Pearson},
+  title    = {Distributions.jl: Definition and Modeling of Probability Distributions in the JuliaStats Ecosystem},
+  journal  = {Journal of Statistical Software},
+  volume   = {98},
+  number   = {16},
+  year     = {2021},
+  keywords = {Julia; distributions; modeling; interface; mixture; KDE; sampling; probabilistic programming; inference},
+  issn     = {1548-7660},
+  pages    = {1--30},
+  doi      = {10.18637/jss.v098.i16},
+  url      = {https://www.jstatsoft.org/v098/i16}
+}
+
+
+
+@manual{hayes2022distributions3,
+  title  = {distributions3: Probability Distributions as S3 Objects},
+  author = {Alex Hayes and Ralph Moller-Trane and Daniel Jordan and Paul Northrop and Moritz N. Lang and Achim Zeileis},
+  year   = {2022},
+  note   = {R package version 0.2.1},
+  url    = {https://CRAN.R-project.org/package=distributions3}
+}
+
+@article{ruckdeschel2014distr,
+  title   = {General Purpose Convolution Algorithm in {S}4 Classes by Means of FFT},
+  author  = {Peter Ruckdeschel and Matthias Kohl},
+  journal = {Journal of Statistical Software},
+  year    = {2014},
+  volume  = {59},
+  number  = {4},
+  pages   = {1--25},
+  url     = {http://www.jstatsoft.org/v59/i04/}
+}
+
+@article{hyndman2011,
+author = {Hyndman, Rob J. and Ahmed, Roman A. and Athanasopoulos, George and Shang, Han Lin},
+title = {Optimal Combination Forecasts for Hierarchical Time Series},
+year = {2011},
+publisher = {Elsevier Science Publishers B. V.},
+address = {NLD},
+volume = {55},
+number = {9},
+issn = {0167-9473},
+url = {https://doi.org/10.1016/j.csda.2011.03.006},
+doi = {10.1016/j.csda.2011.03.006},
+abstract = {In many applications, there are multiple time series that are hierarchically organized and can be aggregated at several different levels in groups based on products, geography or some other features. We call these ''hierarchical time series''. They are commonly forecast using either a ''bottom-up'' or a ''top-down'' method. In this paper we propose a new approach to hierarchical forecasting which provides optimal forecasts that are better than forecasts produced by either a top-down or a bottom-up approach. Our method is based on independently forecasting all series at all levels of the hierarchy and then using a regression model to optimally combine and reconcile these forecasts. The resulting revised forecasts add up appropriately across the hierarchy, are unbiased and have minimum variance amongst all combination forecasts under some simple assumptions. We show in a simulation study that our method performs well compared to the top-down approach and the bottom-up method. We demonstrate our proposed method by forecasting Australian tourism demand where the data are disaggregated by purpose of travel and geographical region.},
+journal = {Comput. Stat. Data Anal.},
+pages = {2579–2589},
+numpages = {11},
+keywords = {Combining forecasts, Hierarchical forecasting, Top-down forecasting, Bottom-up forecasting, Reconciling forecasts, GLS regression}
+}
+
+@article{ATHANASOPOULOS201760,
+title = {Forecasting with temporal hierarchies},
+journal = {European Journal of Operational Research},
+volume = {262},
+number = {1},
+pages = {60-74},
+year = {2017},
+issn = {0377-2217},
+doi = {https://doi.org/10.1016/j.ejor.2017.02.046},
+url = {https://www.sciencedirect.com/science/article/pii/S0377221717301911},
+author = {George Athanasopoulos and Rob J. Hyndman and Nikolaos Kourentzes and Fotios Petropoulos},
+keywords = {Forecasting, Hierarchical forecasting, Temporal aggregation, Reconciliation, Forecast combination},
+abstract = {This paper introduces the concept of Temporal Hierarchies for time series forecasting. A temporal hierarchy can be constructed for any time series by means of non-overlapping temporal aggregation. Predictions constructed at all aggregation levels are combined with the proposed framework to result in temporally reconciled, accurate and robust forecasts. The implied combination mitigates modelling uncertainty, while the reconciled nature of the forecasts results in a unified prediction that supports aligned decisions at different planning horizons: from short-term operational up to long-term strategic planning. The proposed methodology is independent of forecasting models. It can embed high level managerial forecasts that incorporate complex and unstructured information with lower level statistical forecasts. Our results show that forecasting with temporal hierarchies increases accuracy over conventional forecasting, particularly under increased modelling uncertainty. We discuss organisational implications of the temporally reconciled forecasts using a case study of Accident & Emergency departments.}
+}
+
+@article{KOURENTZES2019393,
+title = {Cross-temporal coherent forecasts for Australian tourism},
+journal = {Annals of Tourism Research},
+volume = {75},
+pages = {393-409},
+year = {2019},
+issn = {0160-7383},
+doi = {https://doi.org/10.1016/j.annals.2019.02.001},
+url = {https://www.sciencedirect.com/science/article/pii/S0160738319300167},
+author = {Nikolaos Kourentzes and George Athanasopoulos},
+keywords = {Cross-sectional aggregation, Temporal aggregation, Forecast combinations, Spatial correlations},
+abstract = {Key to ensuring a successful tourism sector is timely policy making and detailed planning. National policy formulation and strategic planning requires long-term forecasts at an aggregate level, while regional operational decisions require short-term forecasts, relevant to local tourism operators. For aligned decisions at all levels, supporting forecasts must be ‘coherent’, that is they should add up appropriately, across relevant demarcations (e.g., geographical divisions or market segments) and also across time. We propose an approach for generating coherent forecasts across both cross-sections and planning horizons for Australia. This results in significant improvements in forecast accuracy with substantial decision making benefits. Coherent forecasts help break intra- and inter-organisational information and planning silos, in a data driven fashion, blending information from different sources. This article also launches the Annals of Tourism Research Curated Collection on Tourism Demand Forecast, a special selection of research in this field.}
+}
+
+@article{wickramasuriya2019,
+  author = {Shanika L. Wickramasuriya and George Athanasopoulos and Rob J. Hyndman},
+  title = {Optimal Forecast Reconciliation for Hierarchical and Grouped Time Series Through Trace Minimization},
+  journal = {Journal of the American Statistical Association},
+  volume = {114},
+  number = {526},
+  pages = {804-819},
+  year = {2019},
+  publisher = {Taylor & Francis},
+  doi = {10.1080/01621459.2018.1448825},
+  URL = {https://doi.org/10.1080/01621459.2018.1448825}
+}
+
+@misc{girolimetto2023point,
+      title={Point and probabilistic forecast reconciliation for general linearly constrained multiple time series},
+      author={Daniele Girolimetto and Tommaso {Di Fonzo}},
+      year={2023},
+      eprint={2305.05330},
+      archivePrefix={arXiv},
+      primaryClass={stat.ME}
+}
+
+@manual{sonabend2022distr6,
+  title  = {distr6: The Complete R6 Probability Distributions Interface},
+  author = {Raphael Sonabend and Franz Kiraly},
+  year   = {2022},
+  note   = {https://alan-turing-institute.github.io/distr6/}
+}
+
+@article{wickham2019tidyverse,
+  title   = {Welcome to the {tidyverse}},
+  author  = {Hadley Wickham and Mara Averick and Jennifer Bryan and Winston Chang and Lucy D'Agostino McGowan and Romain François and Garrett Grolemund and Alex Hayes and Lionel Henry and Jim Hester and Max Kuhn and Thomas Lin Pedersen and Evan Miller and Stephan Milton Bache and Kirill Müller and Jeroen Ooms and David Robinson and Dana Paige Seidel and Vitalie Spinu and Kohske Takahashi and Davis Vaughan and Claus Wilke and Kara Woo and Hiroaki Yutani},
+  year    = {2019},
+  journal = {Journal of Open Source Software},
+  volume  = {4},
+  number  = {43},
+  pages   = {1686},
+  doi     = {10.21105/joss.01686}
+}
+
+@article{hyndman1996hdr,
+  issn      = {00031305},
+  url       = {http://www.jstor.org/stable/2684423},
+  abstract  = {Many statistical methods involve summarizing a probability distribution by a region of the sample space covering a specified probability. One method of selecting such a region is to require it to contain points of relatively high density. Highest density regions are particularly useful for displaying multimodal distributions and, in such cases, may consist of several disjoint subsets-one for each local mode. In this paper, I propose a simple method for computing a highest density region from any given (possibly multivariate) density f(x) that is bounded and continuous in x. Several examples of the use of highest density regions in statistical graphics are also given. A new form of boxplot is proposed based on highest density regions; versions in one and two dimensions are given. Highest density regions in higher dimensions are also discussed and plotted.},
+  author    = {Rob J. Hyndman},
+  journal   = {The American Statistician},
+  number    = {2},
+  pages     = {120--126},
+  publisher = {[American Statistical Association, Taylor & Francis, Ltd.]},
+  title     = {Computing and Graphing Highest Density Regions},
+  volume    = {50},
+  year      = {1996}
+}
+
+@Manual{oharawild2024fabletools,
+  title  = {fabletools: Core Tools for Packages in the 'fable' Framework},
+  author = {Mitchell O'Hara-Wild and Rob Hyndman and Earo Wang},
+  year   = {2024},
+  url    = {https://fabletools.tidyverts.org/}
+}
+
+@Manual{pedersen2024tidygraph,
+  title = {tidygraph: A Tidy API for Graph Manipulation},
+  author = {Thomas Lin Pedersen},
+  year = {2024},
+  note = {R package version 1.3.0.9000,
+https://github.com/thomasp85/tidygraph},
+  url = {https://tidygraph.data-imaginist.com},
+}
+
+@article{matheson1976crps,
+  issn      = {00251909, 15265501},
+  url       = {http://www.jstor.org/stable/2629907},
+  abstract  = {Personal, or subjective, probabilities are used as inputs to many inferential and decision-making models, and various procedures have been developed for the elicitation of such probabilities. Included among these elicitation procedures are scoring rules, which involve the computation of a score based on the assessor's stated probabilities and on the event that actually occurs. The development of scoring rules has, in general, been restricted to the elicitation of discrete probability distributions. In this paper, families of scoring rules for the elicitation of continuous probability distributions are developed and discussed.},
+  author    = {James E. Matheson and Robert L. Winkler},
+  journal   = {Management Science},
+  number    = {10},
+  pages     = {1087--1096},
+  publisher = {INFORMS},
+  title     = {Scoring Rules for Continuous Probability Distributions},
+  volume    = {22},
+  year      = {1976}
+}
+
+@article{wilkinson1973symbolic,
+  issn      = {00359254, 14679876},
+  url       = {http://www.jstor.org/stable/2346786},
+  abstract  = {The paper describes the symbolic notation and syntax for specifying factorial models for analysis of variance in the control language of the GENSTAT statistical program system at Rothamsted. The notation generalizes that of Nelder (1965). Algorithm AS 65 (Rogers, 1973) converts factorial model formulae in this notation to a list of model terms represented as binary integers. A further extension of the syntax is discussed for specifying models generally (including non-linear forms).},
+  author    = {G. N. Wilkinson and C. E. Rogers},
+  journal   = {Journal of the Royal Statistical Society. Series C (Applied Statistics)},
+  number    = {3},
+  pages     = {392--399},
+  publisher = {[Wiley, Royal Statistical Society]},
+  title     = {Symbolic Description of Factorial Models for Analysis of Variance},
+  volume    = {22},
+  year      = {1973}
+}
+
+@article{grolemund2011lubridate,
+  title   = {Dates and Times Made Easy with {lubridate}},
+  author  = {Garrett Grolemund and Hadley Wickham},
+  journal = {Journal of Statistical Software},
+  year    = {2011},
+  volume  = {40},
+  number  = {3},
+  pages   = {1--25},
+  url     = {https://www.jstatsoft.org/v40/i03/}
+}
+
+@incollection{Andreou2011,
+  title     = {Forecasting with Mixed-Frequency Data},
+  author    = {Andreou, Elena and Ghysels, Eric and Kourtellos, Andros},
+  year      = 2011,
+  doi       = {10.1093/oxfordhb/9780195398649.013.0009},
+  booktitle = {{The Oxford Handbook of Economic Forecasting}},
+  publisher = {Oxford University Press},
+  year      = {2011},
+  abstract  = {{This article, which presents a regression framework that relates the quarterly macro variable (such as GDP growth) to higher-frequency variables in a relatively simple, parsimonious way, is organized as follows. Section 2 covers mixed data sampling (MIDAS) regressions. Section 3 covers so-called nowcasting, and the Kalman filter and its relationship with MIDAS regressions. The final section discusses volatility models using mixed frequencies.}},
+  doi       = {10.1093/oxfordhb/9780195398649.013.0009}
+}
+
+@article{coherentprob,
+  author  = {Anastasios Panagiotelis and Puwasala Gamakumara and George Athanasopoulos and Rob J Hyndman},
+  year    = 2022,
+  title   = {Probabilistic forecast reconciliation: properties, evaluation and score optimisation},
+  journal = {European J Operational Research},
+  note    = {in press},
+  url     = {robjhyndman.com/publications/coherentprob/}
+}
+
+@article{temporal-hierarchies,
+  title   = {Forecasting with temporal hierarchies},
+  author  = {George Athanasopoulos and Rob J Hyndman and Nikolaos Kourentzes and Fotios Petropoulos},
+  year    = 2017,
+  number  = {1},
+  pages   = {60-74},
+  volume  = {262},
+  journal = {European Journal of Operational Research}
+}
+
+@book{chambers1992statistical,
+  title={Statistical models in {S}},
+  author={Chambers, John M and Hastie, Trevor J},
+  publisher = "Chapman \& Hall/CRC",
+  year      =  1993,
+  address   = "Philadelphia, PA",
+  isbn      = "9780412053016"
+}
+
+@book{hyndman2021fpp3,
+  title     ={Forecasting: principles and practice, 3rd edition},
+  author    ={Rob J Hyndman and George Athanasopoulos},
+  year      ={2021},
+  publisher ={OTexts},
+  url       = {https://otexts.com/fpp3/}
+}
+
+
+@Manual{wickham2022vctrs,
+  title = {vctrs: Vector Helpers},
+  author = {Hadley Wickham and Lionel Henry and Davis Vaughan},
+  year = {2022},
+  note = {R package version 0.5.0},
+  url = {https://vctrs.r-lib.org/},
+}
+
+@Manual{kay2022ggdist,
+  title = {{ggdist}: Visualizations of Distributions and Uncertainty},
+  author = {Matthew Kay},
+  year    = 2022,
+  note = {R package version 3.2.0},
+  url = {https://mjskay.github.io/ggdist/},
+  doi = {10.5281/zenodo.3879620},
+}
+
+@article{hyndman2006mase,
+  title = "Another look at measures of forecast accuracy",
+  author = "Hyndman, {Rob John} and Koehler, {Ann B}",
+  year = "2006",
+  doi = "10.1016/j.ijforecast.2006.03.001",
+  language = "English",
+  volume = "22",
+  pages = "679 -- 688",
+  journal = "International Journal of Forecasting",
+  issn = "0169-2070",
+  publisher = "Elsevier",
+  number = "4"
+}
+
+@article{zeileis2005zoo,
+  title = {zoo: S3 Infrastructure for Regular and Irregular Time
+    Series},
+  author = {Achim Zeileis and Gabor Grothendieck},
+  journal = {Journal of Statistical Software},
+  year = {2005},
+  volume = {14},
+  number = {6},
+  pages = {1--27},
+  doi = {10.18637/jss.v014.i06},
+}
