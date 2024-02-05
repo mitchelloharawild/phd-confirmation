@@ -201,10 +201,6 @@ $endif$
 $if(title)$
 \title{$title$}
 $endif$
-$if(subtitle)$
-\providecommand{\subtitle}[1]{}
-\subtitle{$subtitle$}
-$endif$
 
 $if(author)$
 \author{$author$}
@@ -378,11 +374,11 @@ $if(branding)$%
         \includegraphics[height=0.7cm]{AMBA}
 \end{textblock}
 $endif$
-\vspace*{-1.2cm}
+\vspace*{-1cm}
 \LARGE\bfseries}
-\posttitle{\vspace*{0.3cm}\par}
+\posttitle{\mdseries\\$subtitle$\vspace*{0.3cm}\par}
 \preauthor{\large}
-\postauthor{\hfill}
+\postauthor{\small\itshape\\Supervised by Rob Hyndman and George Athanasopoulos\hfill}
 \predate{\small}
 \postdate{\vspace*{0.1cm}}
 
@@ -406,7 +402,7 @@ $if(branding)$\vspace*{0cm}$else$\vspace*{-2cm}$endif$
 \definecolor{shadecolor}{RGB}{210,210,210}
 \begin{snugshade}\sffamily
 \maketitle
-\end{snugshade}\vspace*{0.5cm}
+\end{snugshade}
 \definecolor{shadecolor}{RGB}{248,248,248}
 $endif$
 $if(spacing)$
