@@ -1,0 +1,345 @@
+[
+  {
+    "objectID": "presentation/index.html#section",
+    "href": "presentation/index.html#section",
+    "title": "",
+    "section": "",
+    "text": "Reconciliation of structured time series forecasts with graphs\n\n\nPhD confirmation presentation, 6th February 2024\n\nMitchell O’Hara-Wild, Monash University\n\nSupervised by Rob Hyndman and George Athanasopolous\n\n\n\n\n\n\n\nUseful links\n\n\n social.mitchelloharawild.com\n slides.mitchelloharawild.com/phd-confirmation\n mitchelloharawild/phd-confirmation"
+  },
+  {
+    "objectID": "presentation/index.html#section-1",
+    "href": "presentation/index.html#section-1",
+    "title": "",
+    "section": "",
+    "text": "PhD thesis structure\n\n\n\n\n\n\n\nGraph coherency constraints\n\nGraphs flexibly describe cross-sectional relationships between time series.\n\n\nTopic 1\n\n\n\n\n\n\n\n\nPruning data with graphs\n\nPruning graphs to remove uninformative time series can both improve forecasting accuracy and computation time.\n\n\nTopic 2\n\n\n\n\n\n\n\n\nRepresenting probabilistic forecasts\n\nVectorised distributions for use in a tidy forecasting workflow to adequately describe forecast uncertainty.\n\n\nTopic 3\n\n\n\n\n\n\n\n\nTemporal coherency constraints\n\nRepresenting time with varied temporal granularities in a tidy time series data structure.\n\n\nTopic 4\n\n\n\n\n\n\n\n\nTidy forecasting framework\n\nCombining the foundational tools described above to support a tidy forecasting workflow.\n\n\nTopic 5"
+  },
+  {
+    "objectID": "presentation/index.html#the-basics-of-reconciliation",
+    "href": "presentation/index.html#the-basics-of-reconciliation",
+    "title": "",
+    "section": "The basics of reconciliation",
+    "text": "The basics of reconciliation\n\n\n\n\n\n\n\n\nHow many tourists will visit Melbourne?\n\n\n\nForecast \\(\\text{Visitors}_{T+h|T}\\) with a suitable model and data.\n\n\n\n\n\n\n\n\n\n\n\nHow many visitors are from Australia and overseas?\n\n\n\nForecast \\(\\text{Interstate}_{T+h|T}\\) and \\(\\text{International}_{T+h|T}\\) with\nsuitable models and data.\n\n\n\n\n\n\n\n\n\n\n\n\nSomething doesn’t add up here…\n\n\nIndependently produced forecasts are incoherent,\n\\(\\text{Visitors}_{T+h|T} \\neq \\text{Interstate}_{T+h|T} + \\text{International}_{T+h|T}\\)."
+  },
+  {
+    "objectID": "presentation/index.html#section-2",
+    "href": "presentation/index.html#section-2",
+    "title": "",
+    "section": "",
+    "text": "Coherency constraints\n\n\n\n\n\n\n\n\nImpose constraints to ensure coherency\n\n\nAdjust the forecasts to satisfy the constraint\n\\(\\text{Visitors}_{T+h|T} = \\text{Interstate}_{T+h|T} + \\text{International}_{T+h|T}\\).\n\n\n\n\n\n\n\n\n\n\nStructural representation\n\n\nConstraints can be represented using matrices:\n\\[\n\\begin{bmatrix}\n  \\text{Visitors}_{t} \\\\\n  \\text{Interstate}_{t} \\\\\n  \\text{International}_{t} \\\\\n\\end{bmatrix}\n=\n\\begin{bmatrix}\n  1 & 1 \\\\\n  1 & 0\\\\\n  0 & 1 \\\\\n\\end{bmatrix}\n\\begin{bmatrix}\n  \\text{Interstate}_{t} \\\\\n  \\text{International}_{t} \\\\\n\\end{bmatrix}\n\\]\nor compactly, \\(\\mathbf{y}_t = \\mathbf{S} \\mathbf{b}_t\\)\n\n\n\n\n\n\n\n\n\n\n\nRelevant paper\n\n\nMore information in Hyndman et al. (2011)."
+  },
+  {
+    "objectID": "presentation/index.html#section-3",
+    "href": "presentation/index.html#section-3",
+    "title": "",
+    "section": "",
+    "text": "Coherency constraints\n\n\n\n\n\n\n\n\n\nZero-constrained representation\n\n\nAlternatively, the constraints can also be described with\n\\[\n\\begin{bmatrix}\n  1 & -1 & -1 \\\\\n\\end{bmatrix}\n\\begin{bmatrix}\n  \\text{Visitors}_{t} \\\\\n  \\text{Interstate}_{t} \\\\\n  \\text{International}_{t} \\\\\n\\end{bmatrix}\n=\n\\begin{bmatrix}\n0\n\\end{bmatrix}\n\\]\nor compactly, \\(\\mathbf{C}\\mathbf{y}_t = \\mathbf{0}\\).\n\n\n\n\n\n\n\n\n\n\n\nIt’s usually easy to switch between these representations.\nBoth \\(\\mathbf{C}\\) and \\(\\mathbf{S}\\) share a common aggregation matrix \\(\\mathbf{A}\\).\n\\[\n\\mathbf{S} = \\begin{bmatrix}\n\\mathbf{A}\\\\\n\\mathbf{I}_{n_b}\n\\end{bmatrix},\\hspace{2em}\n\\mathbf{C} = \\begin{bmatrix}\n\\mathbf{I}_{n_a} & -\\mathbf{A}\n\\end{bmatrix}.\n\\]"
+  },
+  {
+    "objectID": "presentation/index.html#section-4",
+    "href": "presentation/index.html#section-4",
+    "title": "",
+    "section": "",
+    "text": "Coherency constraints\n\n\n\n\n\n\nThese representations can’t represent all constraints\n\n\nHierarchical and grouped constraints work well, since they have single top series and common bottom series.\n\n\n\n\n\n\n\n\n\n\nGeneral linearly constrained time series\n\n\nGirolimetto and Di Fonzo (2023) generalise the zero-constrained representation to support any constraint.\n\n\n\n\n\n\n\n\n\n\n\nGraph representation of constraints\n\n\nI propose representing constraints using directed acyclical graphs (DAGs) which achieve the same generality with added benefits."
+  },
+  {
+    "objectID": "presentation/index.html#section-5",
+    "href": "presentation/index.html#section-5",
+    "title": "",
+    "section": "",
+    "text": "General linear constraints\n\n\n\n\n\n\nGeneralisation from zero-constrained representation\n\n\n\nRather than upper and bottom series, consider constrained and unconstrained series.\n\n\n\nSimilar to \\(\\mathbf{C}\\), \\(\\mathbf{\\Gamma}\\) imposes zero-constraints: \\(\\mathbf{\\Gamma}\\mathbf{y}_t = \\mathbf{0}\\).\n\\[\n\\mathbf{\\Gamma} = \\begin{bmatrix}\n1 & 0 & -1 & -1 & -1 &  0 &  0\\\\\n1 & 0 &  0 &  0 &  0 & -1 & -1\\\\\n0 & 1 & -1 & -1 &  0 &  0 &  0\\\\\n\\end{bmatrix}\n\\]\n\n\nHowever the structural representation and aggregation matrix \\(\\mathbf{A}\\) is hard to obtain since\n\\[\n\\mathbf{S} = \\begin{bmatrix}\n\\mathbf{A}\\\\\n\\mathbf{I}_{n_b}\n\\end{bmatrix},\\hspace{2em}\n\\mathbf{\\Gamma} \\neq \\begin{bmatrix}\n\\mathbf{I}_{n_a} & -\\mathbf{A}\n\\end{bmatrix}.\n\\]\n\n\nFor linear reconciliation, both graph coherence and ‘general linearly constrained’ coherence are equivalent."
+  },
+  {
+    "objectID": "presentation/index.html#section-6",
+    "href": "presentation/index.html#section-6",
+    "title": "",
+    "section": "",
+    "text": "General linear constraints\n\n\n\n\n\n\nGeneralisation from zero-constrained representation\n\n\n\nUse standard linear algebra techniques to transform \\(\\mathbf{\\Gamma}\\) into a full rank matrix \\(\\mathbf{\\bar{U}}\\) of form of \\(\\mathbf{C}\\).\n\\[\n\\mathbf{\\Gamma} = \\begin{bmatrix}\n1 & 0 & -1 & -1 & -1 &  0 &  0\\\\\n1 & 0 &  0 &  0 &  0 & -1 & -1\\\\\n0 & 1 & -1 & -1 &  0 &  0 &  0\\\\\n\\end{bmatrix}\n\\] Two options are proposed:\n\nReduced row echelon form (Meyer and Stewart 2023)\nQR decomposition (Lyche 2020)\n\n\n\n\nApplying this technique provides an equivalent matrix from which \\(\\mathbf{A}\\) is easily obtained.\n\\[\n\\mathbf{\\bar{U}} = \\left[\\begin{array}{ccc:cccc}\n1 & 0 & 0 &  0 &  0 & -1 & -1\\\\\n0 & 1 & 0 &  0 &  1 & -1 & -1\\\\\n0 & 0 & 1 &  1 &  1 & -1 & -1\\\\\n\\end{array}\\right]\n\\]\n\n\n\nFrom which a “structural-like” representation, \\(\\mathbf{y}_t = \\mathbf{\\bar{S}}\\mathbf{b}_t\\) can be constructed:\n\\[\n\\mathbf{\\bar{S}} = \\left[\\begin{array}{cccc}\n0 &  0 & -1 & -1\\\\\n0 &  1 & -1 & -1\\\\\n1 &  1 & -1 & -1\\\\\\hdashline\n1 & 0 & 0 & 0\\\\\n0 & 1 & 0 & 0\\\\\n0 & 0 & 1 & 0\\\\\n0 & 0 & 0 & 1\n\\end{array}\\right].\n\\]"
+  },
+  {
+    "objectID": "presentation/index.html#section-7",
+    "href": "presentation/index.html#section-7",
+    "title": "",
+    "section": "",
+    "text": "Graph constraints\n\n\n\n\n\n\nA novel representation of coherency constraints\n\n\nGraphs are often used to visualise the constraints…\nbut can they also be useful in imposing the constraints?\n\n\n\n\n\n\n\n\n\nGraphs are used widely in computer science\n\n\nRepresenting coherency constraints using graphs would:\n\nintroduce graph terminology for navigating structures\nsimplify the description of the coherency constraints\nallow representation of non-linear relationships\nunify tools for visualisation and reconciliation"
+  },
+  {
+    "objectID": "presentation/index.html#section-8",
+    "href": "presentation/index.html#section-8",
+    "title": "",
+    "section": "",
+    "text": "Hierarchical coherence\n\n\n\n\n\n\nEach aggregate has a single constraint\n\n\nThe basic constraint shown before is ‘hierarchical’"
+  },
+  {
+    "objectID": "presentation/index.html#section-9",
+    "href": "presentation/index.html#section-9",
+    "title": "",
+    "section": "",
+    "text": "Hierarchical coherence\n\n\n\n\n\n\nEach aggregate has a single constraint\n\n\nHierarchical series often have multiple layers\n\n\n\n\n\n\n\nIn graph terms, this is known as a polytree."
+  },
+  {
+    "objectID": "presentation/index.html#section-10",
+    "href": "presentation/index.html#section-10",
+    "title": "",
+    "section": "",
+    "text": "Grouped coherence\n\n\n\n\n\n\nConsidering origin and workplace\n\n\nAttendance can be disaggregated by both origin and workplace…"
+  },
+  {
+    "objectID": "presentation/index.html#section-11",
+    "href": "presentation/index.html#section-11",
+    "title": "",
+    "section": "",
+    "text": "Grouped coherence\n\n\n\n\n\n\nConsidering origin and workplace\n\n\nand then further disaggregated by the other.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA grouped structure has the same top and bottom series."
+  },
+  {
+    "objectID": "presentation/index.html#section-12",
+    "href": "presentation/index.html#section-12",
+    "title": "",
+    "section": "",
+    "text": "Grouped coherence\n\n\n\n\n\n\nConsidering origin and workplace\n\n\nThe grouped structure can be plotted in a single graph.\n\n\n\n\n\n\n\nIn graph terms, this is a directed acyclical graph (DAG)."
+  },
+  {
+    "objectID": "presentation/index.html#section-13",
+    "href": "presentation/index.html#section-13",
+    "title": "",
+    "section": "",
+    "text": "Temporal coherence\n\n\n\n\n\n\nA time series can be disaggregated by temporal granularity\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRelevant paper\n\n\nTemporal reconciliation is described in Athanasopoulos et al. (2017).\n\n\n\n\n\n\n\n\n\n\nWhat type of coherence structure is this?\n\n\n\nThis is a polytree, so this structure is hierarchical."
+  },
+  {
+    "objectID": "presentation/index.html#section-14",
+    "href": "presentation/index.html#section-14",
+    "title": "",
+    "section": "",
+    "text": "Temporal coherence\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nWhat type of coherence structure is this?\n\n\n\nThis structure has the same top and bottom series, so\ntemporal coherence is a grouped constraint."
+  },
+  {
+    "objectID": "presentation/index.html#section-15",
+    "href": "presentation/index.html#section-15",
+    "title": "",
+    "section": "",
+    "text": "Temporal coherence\n\n\n\n\n\n\nTemporal coherence constraints are grouped can also be represented with directed acyclical graphs (DAGs)."
+  },
+  {
+    "objectID": "presentation/index.html#section-16",
+    "href": "presentation/index.html#section-16",
+    "title": "",
+    "section": "",
+    "text": "Cross-temporal coherence\n\n\n\n\n\n\nSince both grouped and temporal coherence are DAGs, the interaction between them is a single DAG."
+  },
+  {
+    "objectID": "presentation/index.html#section-17",
+    "href": "presentation/index.html#section-17",
+    "title": "",
+    "section": "",
+    "text": "Graph coherence\nA directed acyclical graph does not require a common top and bottom series.\n\n\nWhat happens if we relax this definition of grouped coherence, and use the more general DAG structure.\n\n\n\n\n\n\nIs it reasonable to leverage the full generality of DAGs?\n\n\n\nYes! Let’s see why."
+  },
+  {
+    "objectID": "presentation/index.html#section-18",
+    "href": "presentation/index.html#section-18",
+    "title": "",
+    "section": "",
+    "text": "Unbalanced graphs\nWhat if the coherency structure had different bottom series?\n\nThis often occurs in these circumstances:\n\nCross-temporal with series observed at different granularities.\nMultiple different approaches to calculating the top series.\nPartial coherency by ‘trimming’ sparse disaggregations."
+  },
+  {
+    "objectID": "presentation/index.html#section-19",
+    "href": "presentation/index.html#section-19",
+    "title": "",
+    "section": "",
+    "text": "Cross-temporal with series observed at different granularities.\n\n\n\n\n\n\n\n\nExample\n\n\nSuppose Sales is reported quarterly, but Profit and Costs twice yearly."
+  },
+  {
+    "objectID": "presentation/index.html#section-20",
+    "href": "presentation/index.html#section-20",
+    "title": "",
+    "section": "",
+    "text": "Cross-temporal with series observed at different granularities.\n\n\n\n\n\n\n\nExample\n\n\n\n\n\n\n\n\n\n\nThis allows the higher frequency Sales data to be used with the less frequent Profit and Costs data!"
+  },
+  {
+    "objectID": "presentation/index.html#section-21",
+    "href": "presentation/index.html#section-21",
+    "title": "",
+    "section": "",
+    "text": "Multiple different approaches to calculating the top series.\n\n\n\n\n\n\n\n\nExample\n\n\nAustralian GDP is calculated with 3 approaches:\n\nIncome approach (I)\nExpenditure approach (E)\nProduction approach (P)\n\nFor simplicity consider a small part of these graphs. The complete graph structure has many more disaggregates.\n\n\n\n\n\n\n\n\n\nRelevant paper\n\n\nThis example is used in Athanasopoulos et al. (2020)."
+  },
+  {
+    "objectID": "presentation/index.html#section-22",
+    "href": "presentation/index.html#section-22",
+    "title": "",
+    "section": "",
+    "text": "Multiple different approaches to calculating the top series.\n\n\n\n\n\n\n\n\nIncome approach (I)\n\n\n\n\n\n\n\n\nExpenditure approach (E)"
+  },
+  {
+    "objectID": "presentation/index.html#section-23",
+    "href": "presentation/index.html#section-23",
+    "title": "",
+    "section": "",
+    "text": "Multiple different approaches to calculating the top series.\n\n\n\n\n\n\n\n\nCombined approach (I & E)"
+  },
+  {
+    "objectID": "presentation/index.html#section-24",
+    "href": "presentation/index.html#section-24",
+    "title": "",
+    "section": "",
+    "text": "Partial coherency by ‘trimming’ sparse disaggregations.\n\n\n\n\n\n\n\nIf the bottom level is too sparse, it is more complicated to model and reconciliation can worsen forecast accuracy."
+  },
+  {
+    "objectID": "presentation/index.html#section-25",
+    "href": "presentation/index.html#section-25",
+    "title": "",
+    "section": "",
+    "text": "Incomplete graphs\nWhat if the coherency structure doesn’t completely aggregate, so that there are multiple top series.\n\n\nThis can occur for many reasons:\n\nCross-validation with reconciliation\nPartial/local coherency (e.g. not including worldwide total)"
+  },
+  {
+    "objectID": "presentation/index.html#section-26",
+    "href": "presentation/index.html#section-26",
+    "title": "",
+    "section": "",
+    "text": "Cross-validation with reconciliation\n\n\n\n\n\n\n\nIt makes no sense to aggregate folds of cross-validation.\n\nA suitable DAG for cross-validated hierarchies is\n\n\n\n\n\n\n\n\nEach disjoint graph can be reconciled separately."
+  },
+  {
+    "objectID": "presentation/index.html#section-27",
+    "href": "presentation/index.html#section-27",
+    "title": "",
+    "section": "",
+    "text": "Partial/local coherency\n\n\n\n\n\n\n\nGraph without a common top series"
+  },
+  {
+    "objectID": "presentation/index.html#section-28",
+    "href": "presentation/index.html#section-28",
+    "title": "",
+    "section": "",
+    "text": "Partial/local coherency\n\n\n\n\n\n\n\nAdding Meta as the single parent results in a hierarchy\n\n\n\n\n\n\n\n\nNote that this isn’t a polytree, due to common/shared leafs."
+  },
+  {
+    "objectID": "presentation/index.html#section-29",
+    "href": "presentation/index.html#section-29",
+    "title": "",
+    "section": "",
+    "text": "Implementation in fable\nGraph structures are embedded within tsibble keys using graphvec classes.\n\n\n\n\n\n\n\nUseful functions\n\n\n\nCreate aggregates from bottom series with aggregate_key()  (and someday aggregate_index() for temporal)\nOr get artisanal with agg_vec() and graph_vec() for complex aggregation structures and graphs.\nAdd coherency constraints to models/forecasts with reconcile() and min_trace()\n\n\n\n\n\n\n\n\n\n\n\n\nSuccinctly describe constraints with symbolic language\n\n\nSimilar to modelling interactions in R (R Core Team 2021), common aggregation structures are described with symbolic language (Wilkinson and Rogers 1973).\n\n\n\n\n\n\n\n\n\n\n\nEnhanced functionality\n\n\n\nTools for identifying sub-graphs for exploring series\nTools for changing the graph without removing data\nTools for validating operations which change the graph"
+  },
+  {
+    "objectID": "presentation/index.html#section-30",
+    "href": "presentation/index.html#section-30",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\nlibrary(tsibble)\nlibrary(fable)\ntourism\n\n# A tsibble: 24,320 x 5 [1Q]\n# Key:       Region, State, Purpose [304]\n   Quarter Region   State           Purpose  Trips\n     &lt;qtr&gt; &lt;chr&gt;    &lt;chr&gt;           &lt;chr&gt;    &lt;dbl&gt;\n 1 1998 Q1 Adelaide South Australia Business  135.\n 2 1998 Q2 Adelaide South Australia Business  110.\n 3 1998 Q3 Adelaide South Australia Business  166.\n 4 1998 Q4 Adelaide South Australia Business  127.\n 5 1999 Q1 Adelaide South Australia Business  137.\n 6 1999 Q2 Adelaide South Australia Business  200.\n 7 1999 Q3 Adelaide South Australia Business  169.\n 8 1999 Q4 Adelaide South Australia Business  134.\n 9 2000 Q1 Adelaide South Australia Business  154.\n10 2000 Q2 Adelaide South Australia Business  169.\n# i 24,310 more rows"
+  },
+  {
+    "objectID": "presentation/index.html#section-31",
+    "href": "presentation/index.html#section-31",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    Purpose * (State / Region),\n    Trips = sum(Trips)\n  )\n\n# A tsibble: 34,000 x 5 [1Q]\n# Key:       Purpose, State, Region [425]\n   Quarter Purpose      State        Region        Trips\n     &lt;qtr&gt; &lt;chr*&gt;       &lt;chr*&gt;       &lt;chr*&gt;        &lt;dbl&gt;\n 1 1998 Q1 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 23182.\n 2 1998 Q2 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 20323.\n 3 1998 Q3 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 19827.\n 4 1998 Q4 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 20830.\n 5 1999 Q1 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 22087.\n 6 1999 Q2 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 21458.\n 7 1999 Q3 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 19914.\n 8 1999 Q4 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 20028.\n 9 2000 Q1 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 22339.\n10 2000 Q2 &lt;aggregated&gt; &lt;aggregated&gt; &lt;aggregated&gt; 19941.\n# i 33,990 more rows"
+  },
+  {
+    "objectID": "presentation/index.html#section-32",
+    "href": "presentation/index.html#section-32",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    Purpose * (State / Region),\n    Trips = sum(Trips)\n  ) |&gt; \n  key_data()\n\n# A tibble: 425 x 4\n   Purpose  State           Region                 .rows\n   &lt;chr*&gt;   &lt;chr*&gt;          &lt;chr*&gt;                 &lt;lis&gt;\n 1 Business ACT             Canberra                [80]\n 2 Business ACT             &lt;aggregated&gt;            [80]\n 3 Business New South Wales Blue Mountains          [80]\n 4 Business New South Wales Capital Country         [80]\n 5 Business New South Wales Central Coast           [80]\n 6 Business New South Wales Central NSW             [80]\n 7 Business New South Wales Hunter                  [80]\n 8 Business New South Wales New England North West  [80]\n 9 Business New South Wales North Coast NSW         [80]\n10 Business New South Wales Outback NSW             [80]\n# i 415 more rows"
+  },
+  {
+    "objectID": "presentation/index.html#section-33",
+    "href": "presentation/index.html#section-33",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    Purpose * State,\n    Trips = sum(Trips)\n  ) |&gt;  \n  key_data()\n\n# A tibble: 45 x 3\n   Purpose      State                    .rows\n   &lt;chr*&gt;       &lt;chr*&gt;             &lt;list&lt;int&gt;&gt;\n 1 Business     ACT                       [80]\n 2 Business     New South Wales           [80]\n 3 Business     Northern Territory        [80]\n 4 Business     Queensland                [80]\n 5 Business     South Australia           [80]\n 6 Business     Tasmania                  [80]\n 7 Business     Victoria                  [80]\n 8 Business     Western Australia         [80]\n 9 Business     &lt;aggregated&gt;              [80]\n10 Holiday      ACT                       [80]\n11 Holiday      New South Wales           [80]\n12 Holiday      Northern Territory        [80]\n13 Holiday      Queensland                [80]\n14 Holiday      South Australia           [80]\n15 Holiday      Tasmania                  [80]\n16 Holiday      Victoria                  [80]\n17 Holiday      Western Australia         [80]\n18 Holiday      &lt;aggregated&gt;              [80]\n19 Other        ACT                       [80]\n20 Other        New South Wales           [80]\n21 Other        Northern Territory        [80]\n22 Other        Queensland                [80]\n23 Other        South Australia           [80]\n24 Other        Tasmania                  [80]\n25 Other        Victoria                  [80]\n26 Other        Western Australia         [80]\n27 Other        &lt;aggregated&gt;              [80]\n28 Visiting     ACT                       [80]\n29 Visiting     New South Wales           [80]\n30 Visiting     Northern Territory        [80]\n31 Visiting     Queensland                [80]\n32 Visiting     South Australia           [80]\n33 Visiting     Tasmania                  [80]\n34 Visiting     Victoria                  [80]\n35 Visiting     Western Australia         [80]\n36 Visiting     &lt;aggregated&gt;              [80]\n37 &lt;aggregated&gt; ACT                       [80]\n38 &lt;aggregated&gt; New South Wales           [80]\n39 &lt;aggregated&gt; Northern Territory        [80]\n40 &lt;aggregated&gt; Queensland                [80]\n41 &lt;aggregated&gt; South Australia           [80]\n42 &lt;aggregated&gt; Tasmania                  [80]\n43 &lt;aggregated&gt; Victoria                  [80]\n44 &lt;aggregated&gt; Western Australia         [80]\n45 &lt;aggregated&gt; &lt;aggregated&gt;              [80]"
+  },
+  {
+    "objectID": "presentation/index.html#section-34",
+    "href": "presentation/index.html#section-34",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    Purpose : State,\n    Trips = sum(Trips)\n  ) |&gt; \n  key_data()\n\n# A tibble: 33 x 3\n   Purpose      State                    .rows\n   &lt;chr*&gt;       &lt;chr*&gt;             &lt;list&lt;int&gt;&gt;\n 1 Business     ACT                       [80]\n 2 Business     New South Wales           [80]\n 3 Business     Northern Territory        [80]\n 4 Business     Queensland                [80]\n 5 Business     South Australia           [80]\n 6 Business     Tasmania                  [80]\n 7 Business     Victoria                  [80]\n 8 Business     Western Australia         [80]\n 9 Holiday      ACT                       [80]\n10 Holiday      New South Wales           [80]\n11 Holiday      Northern Territory        [80]\n12 Holiday      Queensland                [80]\n13 Holiday      South Australia           [80]\n14 Holiday      Tasmania                  [80]\n15 Holiday      Victoria                  [80]\n16 Holiday      Western Australia         [80]\n17 Other        ACT                       [80]\n18 Other        New South Wales           [80]\n19 Other        Northern Territory        [80]\n20 Other        Queensland                [80]\n21 Other        South Australia           [80]\n22 Other        Tasmania                  [80]\n23 Other        Victoria                  [80]\n24 Other        Western Australia         [80]\n25 Visiting     ACT                       [80]\n26 Visiting     New South Wales           [80]\n27 Visiting     Northern Territory        [80]\n28 Visiting     Queensland                [80]\n29 Visiting     South Australia           [80]\n30 Visiting     Tasmania                  [80]\n31 Visiting     Victoria                  [80]\n32 Visiting     Western Australia         [80]\n33 &lt;aggregated&gt; &lt;aggregated&gt;              [80]"
+  },
+  {
+    "objectID": "presentation/index.html#section-35",
+    "href": "presentation/index.html#section-35",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    Purpose + State,\n    Trips = sum(Trips)\n  ) |&gt; \n  key_data()\n\n# A tibble: 13 x 3\n   Purpose      State                    .rows\n   &lt;chr*&gt;       &lt;chr*&gt;             &lt;list&lt;int&gt;&gt;\n 1 Business     &lt;aggregated&gt;              [80]\n 2 Holiday      &lt;aggregated&gt;              [80]\n 3 Other        &lt;aggregated&gt;              [80]\n 4 Visiting     &lt;aggregated&gt;              [80]\n 5 &lt;aggregated&gt; ACT                       [80]\n 6 &lt;aggregated&gt; New South Wales           [80]\n 7 &lt;aggregated&gt; Northern Territory        [80]\n 8 &lt;aggregated&gt; Queensland                [80]\n 9 &lt;aggregated&gt; South Australia           [80]\n10 &lt;aggregated&gt; Tasmania                  [80]\n11 &lt;aggregated&gt; Victoria                  [80]\n12 &lt;aggregated&gt; Western Australia         [80]\n13 &lt;aggregated&gt; &lt;aggregated&gt;              [80]"
+  },
+  {
+    "objectID": "presentation/index.html#section-36",
+    "href": "presentation/index.html#section-36",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    0 + Purpose + State,\n    Trips = sum(Trips)\n  ) |&gt; \n  key_data()\n\n# A tibble: 12 x 3\n   Purpose      State                    .rows\n   &lt;chr*&gt;       &lt;chr*&gt;             &lt;list&lt;int&gt;&gt;\n 1 Business     &lt;aggregated&gt;              [80]\n 2 Holiday      &lt;aggregated&gt;              [80]\n 3 Other        &lt;aggregated&gt;              [80]\n 4 Visiting     &lt;aggregated&gt;              [80]\n 5 &lt;aggregated&gt; ACT                       [80]\n 6 &lt;aggregated&gt; New South Wales           [80]\n 7 &lt;aggregated&gt; Northern Territory        [80]\n 8 &lt;aggregated&gt; Queensland                [80]\n 9 &lt;aggregated&gt; South Australia           [80]\n10 &lt;aggregated&gt; Tasmania                  [80]\n11 &lt;aggregated&gt; Victoria                  [80]\n12 &lt;aggregated&gt; Western Australia         [80]"
+  },
+  {
+    "objectID": "presentation/index.html#section-37",
+    "href": "presentation/index.html#section-37",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    Purpose,\n    Trips = sum(Trips)\n  ) |&gt; \n  stretch_tsibble(.step = 4, .init = 60) |&gt; \n  key_data()\n\n# A tibble: 30 x 3\n     .id Purpose            .rows\n   &lt;int&gt; &lt;chr*&gt;       &lt;list&lt;int&gt;&gt;\n 1     1 Business            [60]\n 2     1 Holiday             [60]\n 3     1 Other               [60]\n 4     1 Visiting            [60]\n 5     1 &lt;aggregated&gt;        [60]\n 6     2 Business            [64]\n 7     2 Holiday             [64]\n 8     2 Other               [64]\n 9     2 Visiting            [64]\n10     2 &lt;aggregated&gt;        [64]\n11     3 Business            [68]\n12     3 Holiday             [68]\n13     3 Other               [68]\n14     3 Visiting            [68]\n15     3 &lt;aggregated&gt;        [68]\n16     4 Business            [72]\n17     4 Holiday             [72]\n18     4 Other               [72]\n19     4 Visiting            [72]\n20     4 &lt;aggregated&gt;        [72]\n21     5 Business            [76]\n22     5 Holiday             [76]\n23     5 Other               [76]\n24     5 Visiting            [76]\n25     5 &lt;aggregated&gt;        [76]\n26     6 Business            [80]\n27     6 Holiday             [80]\n28     6 Other               [80]\n29     6 Visiting            [80]\n30     6 &lt;aggregated&gt;        [80]"
+  },
+  {
+    "objectID": "presentation/index.html#section-38",
+    "href": "presentation/index.html#section-38",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable\n\ntourism |&gt; \n  aggregate_key(\n    Purpose,\n    Trips = sum(Trips)\n  ) |&gt; \n  stretch_tsibble(.step = 4, .init = 60) |&gt; \n  model(ets = ETS(Trips)) |&gt; \n  reconcile(ets_coherent = min_trace(ets)) |&gt; \n  forecast(h = \"1 year\")\n\n# A fable: 240 x 6 [1Q]\n# Key:     .id, Purpose, .model [60]\n     .id Purpose  .model       Quarter            Trips\n   &lt;int&gt; &lt;chr*&gt;   &lt;chr&gt;          &lt;qtr&gt;           &lt;dist&gt;\n 1     1 Business ets          2013 Q1   N(3135, 46032)\n 2     1 Business ets          2013 Q2   N(3832, 73712)\n 3     1 Business ets          2013 Q3   N(4158, 93320)\n 4     1 Business ets          2013 Q4   N(3781, 88006)\n 5     1 Business ets_coherent 2013 Q1   N(3159, 45373)\n 6     1 Business ets_coherent 2013 Q2   N(3848, 69353)\n 7     1 Business ets_coherent 2013 Q3   N(4177, 86871)\n 8     1 Business ets_coherent 2013 Q4   N(3795, 83437)\n 9     1 Holiday  ets          2013 Q1 N(10442, 211377)\n10     1 Holiday  ets          2013 Q2  N(8698, 146661)\n# i 230 more rows\n# i 1 more variable: .mean &lt;dbl&gt;"
+  },
+  {
+    "objectID": "presentation/index.html#section-39",
+    "href": "presentation/index.html#section-39",
+    "title": "",
+    "section": "",
+    "text": "Examples with fable"
+  },
+  {
+    "objectID": "presentation/index.html#section-40",
+    "href": "presentation/index.html#section-40",
+    "title": "",
+    "section": "",
+    "text": "Recap\n\n\n\n\n\n\nCoherence and graph theory\n\n\n\nHierarchical coherence is a polytree.\nGrouped coherence is a restricted DAG.\nGraph coherence is an unrestricted DAG.\n\nDAGs are a useful tool for representing structured time series and producing coherent forecasts."
+  },
+  {
+    "objectID": "presentation/index.html#section-41",
+    "href": "presentation/index.html#section-41",
+    "title": "",
+    "section": "",
+    "text": "What else?\n\n\n\n\n\n\n\n\nOther benefits\n\n\n\nAccess to efficient graph algorithms and ideas\nExploration and description of structured time series\nFamiliar computing grammar for coherent data\n\n\n\n\n\n\n\n\n\n\nFuture work\n\n\n\nExplore automatic processes for reducing the size of the graph to reduce complexity and improve accuracy\nInvestigate alternative graph reconciliation methods (non-linear constraints, faster at-scale reconciliation)"
+  },
+  {
+    "objectID": "presentation/index.html#section-42",
+    "href": "presentation/index.html#section-42",
+    "title": "",
+    "section": "",
+    "text": "PhD progression\n                      \n\n\n\n\n\n\n\n\n\nIdea of graph coherency constraints\n\nWorking on improving reconciliation for fable, I set out to find a more general framework for representing coherency constraints.\n\n\nMar 2023\n\n\n\n\n\n\n\n\nPresented graph coherency at ISF 2023\n\nReceived great support and useful feedback from attendees.\nAwarded with a best student presentation award for the work, provided by Elsevier.\n\n\nJun 2023\n\n\n\n\n\n\n\n\nCompleted the coursework 🎓\n\nPassed all coursework 🎉\nNow to focus on the research!\n\n\nNov 2023\n\n\n\n\n\n\n\n\nCreated the graphvec package\n\nSplit out agg_vec() from fabletools, and extended support with graph_vec() and developed tools for multi-column graphs in tidy data frames.\n\n\nDec 2023\n\n\n\n\n\n\n\n\nDraft of graph coherency paper\n\nPaper is well structured and has a clear path toward completion. Some more work on applications with stronger motivating examples is needed.\n\n\nFeb 2024\n\n\n\n\n\n\n\n\nConfirmation report and presentation\n\n\n\n\nFeb 2024"
+  },
+  {
+    "objectID": "presentation/index.html#section-43",
+    "href": "presentation/index.html#section-43",
+    "title": "",
+    "section": "",
+    "text": "PhD timeline (2024)\n     \n\n\n\n\n\n\n\n\n\nHave a break!\n\nOn leave for two weeks in China 🥶\nHappy new year! 🐉\n\n\nFeb 2024\n\n\n\n\n\n\n\n\nComplete graph coherency paper\n\nWrite, write, write.\n\n\nApr 2024\n\n\n\n\n\n\n\n\nFeature based graph pruning\n\nDevelop a technique for pruning low-signal time series from a coherent graph structure to reduce complexity and increase forecasting performance.\n\n\nMay 2024\n\n\n\n\n\n\n\n\nPresentation at ISF 2024\n\nPresent about pruning coherent time series.\n\n\nJune 2024\n\n\n\n\n\n\n\n\nPresentation at useR! 2024\n\nPresentation about the distributional package, which is the foundation for representing probabilistic forecasts in fable.\n\n\nJuly 2024\n\n\n\n\n\n\n\n\nMid-candidature review and presentation\n\n\n\n\nFeb 2025"
+  },
+  {
+    "objectID": "presentation/index.html#section-44",
+    "href": "presentation/index.html#section-44",
+    "title": "",
+    "section": "",
+    "text": "PhD timeline (2025)\n     \n\n\n\n\n\n\n\n\n\nFinish graph pruning and distribution papers\n\nWrite more, write more, write more…\n\n\nFeb 2025\n\n\n\n\n\n\n\n\nMixed temporal granularity vectors\n\nDesigning a framework for representing temporal moments, intervals, and granularities.\n\n\nApr 2025\n\n\n\n\n\n\n\n\nPresentation at ISF 2025\n\nAbout mixed temporal granularity forecasting and reconciliation with fable.\n\n\nJun 2025\n\n\n\n\n\n\n\n\nFormalise the design of fable\n\nIncorporate the foundations developed in the research above to enhance the design of tidy forecasting with fable.\n\n\nDec 2025\n\n\n\n\n\n\n\n\nFinal review and presentation\n\n\n\n\nFeb 2026"
+  },
+  {
+    "objectID": "presentation/index.html#thanks-for-your-time",
+    "href": "presentation/index.html#thanks-for-your-time",
+    "title": "",
+    "section": "Thanks for your time!",
+    "text": "Thanks for your time!\n\n\n\n\n\n\n\n\nFinal remarks\n\n\n\nI’m trying to build a user-friendly design framework for forecast reconciliation, and it’s uncovered lots of potential directions for future research.\nNext focus is mixed temporal granularities, which works well in the graph framework.\nGraphs provide a useful representation for all coherency constraints, including non-linear structures.\n\n\n\n\n\n\n\n\n\n\nUseful links\n\n\n social.mitchelloharawild.com\n slides.mitchelloharawild.com/phd-confirmation\n mitchelloharawild/phd-confirmation"
+  },
+  {
+    "objectID": "presentation/index.html#unsplash-credits",
+    "href": "presentation/index.html#unsplash-credits",
+    "title": "",
+    "section": "Unsplash credits",
+    "text": "Unsplash credits\n\n\n\n\n\n\nThanks to these Unsplash contributors for their photos\n\n\n\n\n\nAleksandar Radovanovic: Tree rings pattern\nCourtney Smith: Photo\nEilis Garvey: Exposed tree roots\nEmma Gossett: Banyan tree in Hawai&lt;U+2019&gt;i \nFirosnv. Photography: Top View, Shot on iPhone 7\nLocation: Fort…\nMeriç Dağlı: Photo\n五玄土 ORIENTO: Photo\nSander Weeteling: Photo\nYoksel 🌿 Zok: Photo\nZach Callahan: Photo"
+  },
+  {
+    "objectID": "presentation/index.html#references",
+    "href": "presentation/index.html#references",
+    "title": "",
+    "section": "References",
+    "text": "References\n\n\n\n\n\n\nAthanasopoulos, George, Puwasala Gamakumara, Anastasios Panagiotelis, Rob J. Hyndman, and Mohamed Affan. 2020. “Hierarchical Forecasting.” In Macroeconomic Forecasting in the Era of Big Data: Theory and Practice, edited by Peter Fuleky, 689–719. Cham: Springer International Publishing. https://doi.org/10.1007/978-3-030-31150-6_21.\n\n\nAthanasopoulos, George, Rob J. Hyndman, Nikolaos Kourentzes, and Fotios Petropoulos. 2017. “Forecasting with Temporal Hierarchies.” European Journal of Operational Research 262 (1): 60–74. https://doi.org/https://doi.org/10.1016/j.ejor.2017.02.046.\n\n\nGirolimetto, Daniele, and Tommaso Di Fonzo. 2023. “Point and Probabilistic Forecast Reconciliation for General Linearly Constrained Multiple Time Series.” https://arxiv.org/abs/2305.05330.\n\n\nHyndman, Rob J., Roman A. Ahmed, George Athanasopoulos, and Han Lin Shang. 2011. “Optimal Combination Forecasts for Hierarchical Time Series.” Comput. Stat. Data Anal. 55 (9): 2579–89. https://doi.org/10.1016/j.csda.2011.03.006.\n\n\nLyche, Tom. 2020. Numerical Linear Algebra and Matrix Factorizations. Vol. 22. Springer Nature.\n\n\nMeyer, Carl D, and Ian Stewart. 2023. Matrix Analysis and Applied Linear Algebra. SIAM.\n\n\nR Core Team. 2021. R: A Language and Environment for Statistical Computing. Vienna, Austria: R Foundation for Statistical Computing. https://www.R-project.org/.\n\n\nWilkinson, G. N., and C. E. Rogers. 1973. “Symbolic Description of Factorial Models for Analysis of Variance.” Journal of the Royal Statistical Society. Series C (Applied Statistics) 22 (3): 392–99. http://www.jstor.org/stable/2346786."
+  }
+]
