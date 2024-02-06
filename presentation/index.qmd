@@ -1,0 +1,2291 @@
+---
+from: markdown+emoji
+execute:
+  cache: true
+  keep-md: true
+resources:
+  - "resources"
+filters:
+  - custom-callouts
+format: 
+  letterbox-revealjs:
+    css: [custom.css, timeline.css]
+    progress: false
+    menu: false
+    width: 1280
+    height: 720
+    include-after-body: animate.html
+callout-appearance: simple
+bibliography: citations.bib
+---
+
+```{r}
+#| include: false
+library(tidyverse)
+library(ggplot2)
+library(visNetwork)
+library(tidygraph)
+options(width = 60)
+
+visnetwork_hierarchy <- function(data, ...) {
+  nodes <- as_tibble(mutate(activate(data, "nodes"), id = row_number(), level = node_distance_from(node_is_root())))
+  edges <- as_tibble(activate(data, "edges"))
+  graph <- visNetwork(nodes, edges, ...) |> 
+    visHierarchicalLayout(direction = "UD", shakeTowards = "leaves") |> 
+    visOptions(
+      highlightNearest = list(enabled = TRUE, degree = list(from = 50000, to = 0), hover = FALSE, algorithm = "hierarchical"), 
+      collapse = list(enabled = TRUE, fit = FALSE, resetHighlight = TRUE, keepCoord = TRUE,
+                      clusterOptions = list(fixed = TRUE, physics = TRUE))
+    ) |> 
+    visEdges(scaling = list(label = list(enabled = FALSE)), arrows = "to") |> 
+    visNodes(font = list(size = 16))
+  
+  graph$x$tree <- list(updateShape = TRUE, shapeVar = "dot", shapeY = "square")
+  graph
+}
+visnetwork_graph <- function(data, layout = "layout_nicely", ...) {
+  nodes <- as_tibble(mutate(activate(data, "nodes"), id = row_number()))
+  edges <- as_tibble(activate(data, "edges"))
+  graph <- visNetwork(nodes, edges, ...) |> 
+    visIgraphLayout(layout = layout, randomSeed = 123091238) |> 
+    visOptions(
+      highlightNearest = list(enabled = TRUE, degree = list(from = 50000, to = 0), hover = FALSE)
+    ) |> 
+    visEdges(width = 3, scaling = list(label = list(enabled = FALSE)), arrows = "to") |> 
+    visNodes(size = 20)
+  
+  graph$x$tree <- list(updateShape = TRUE, shapeVar = "dot", shapeY = "square")
+  graph
+}
+```
+
+## {}
+
+::: columns
+::: {.column width="37.5%"}
+:::
+::: {.column width="60%"}
+
+::: {.title data-id="title"}
+Reconciliation of structured time series forecasts with graphs
+:::
+
+::: {.dateplace}
+PhD confirmation presentation, 6th February 2024
+:::
+
+Mitchell O'Hara-Wild, Monash University
+
+::: {.smaller}
+Supervised by Rob Hyndman and George Athanasopolous
+:::
+
+::: {.callout-link}
+
+## Useful links
+
+![](resources/forum.svg){.icon} [social.mitchelloharawild.com](https://social.mitchelloharawild.com/)
+
+![](resources/projector-screen-outline.svg){.icon} [slides.mitchelloharawild.com/phd-confirmation](https://slides.mitchelloharawild.com/phd-confirmation)
+
+![](resources/github.svg){.icon} [mitchelloharawild/phd-confirmation](https://github.com/mitchelloharawild/phd-confirmation)
+
+:::
+
+:::
+:::
+
+![](backgrounds/emma-gossett-B645igbiKCw-unsplash.jpg){.image-left}
+
+
+## {.fragment-remove}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### PhD thesis structure
+
+
+::: {.container .fragment .fade-up fragment-index=1}
+::: {.timeline .timeline-left style="height: 720px;"}
+
+
+
+::: {.timeline-block}
+::: {.timeline-icon}
+![](resources/graphvec.svg)
+:::
+::: {.timeline-content}
+**Graph coherency constraints**
+
+::: {.timeline-details .fragment .fade-out fragment-index=2}
+
+Graphs flexibly describe cross-sectional relationships between time series.
+
+:::
+::: {.timeline-date}
+Topic 1
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=2}
+::: {.timeline-icon}
+![](resources/scissors.png)
+:::
+::: {.timeline-content}
+**Pruning data with graphs**
+  
+::: {.timeline-details .fragment .fade-out fragment-index=4}
+Pruning graphs to remove uninformative time series can both improve forecasting accuracy and computation time.
+:::
+::: {.timeline-date}
+Topic 2
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=4}
+::: {.timeline-icon}
+![](resources/crystal-ball.png)
+:::
+::: {.timeline-content}
+**Representing probabilistic forecasts**
+
+::: {.timeline-details .fragment .fade-out fragment-index=5}
+Vectorised distributions for use in a tidy forecasting workflow to adequately describe forecast uncertainty.
+
+:::
+::: {.timeline-date}
+Topic 3
+:::
+:::
+:::
+
+::: {.timeline-block .fragment .fade-up fragment-index=5}
+::: {.timeline-icon}
+![](resources/clock.png)
+:::
+::: {.timeline-content}
+**Temporal coherency constraints**
+
+::: {.timeline-details .fragment .fade-out fragment-index=6}
+Representing time with varied temporal granularities in a tidy time series data structure.
+:::
+::: {.timeline-date}
+Topic 4
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=6}
+::: {.timeline-icon}
+![](resources/fable.png)
+:::
+::: {.timeline-content}
+**Tidy forecasting framework**
+
+::: {.timeline-details}
+Combining the foundational tools described above to support a tidy forecasting workflow.
+:::
+::: {.timeline-date}
+Topic 5
+:::
+:::
+:::
+
+
+:::
+:::
+
+
+:::
+:::
+
+![](backgrounds/chris-lee-70l1tDAI6rM-unsplash.jpg){.image-left}
+
+## The basics of reconciliation
+
+::: columns
+::: {.column width="60%"}
+
+::: {.callout-question}
+
+## How many tourists will visit Melbourne?
+
+::: {.fragment .fade-in}
+Forecast $\text{Visitors}_{T+h|T}$ with a suitable model and data.
+:::
+
+:::
+
+::: {.fragment .fade-in}
+::: {.callout-question}
+## How many visitors are from Australia and overseas?
+
+::: {.fragment .fade-in}
+Forecast $\text{Interstate}_{T+h|T}$ and $\text{International}_{T+h|T}$ with
+
+suitable models and data.
+:::
+:::
+:::
+
+::: {.fragment .fade-in}
+::: {.callout-important}
+## Something doesn't add up here...
+
+Independently produced forecasts are [**incoherent**]{.danger},
+
+$\text{Visitors}_{T+h|T} \neq \text{Interstate}_{T+h|T} + \text{International}_{T+h|T}$.
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/linda-xu-K9NhnXS15ZY-unsplash.jpg){.image-right}
+
+## {}
+### Coherency constraints
+
+::: columns
+::: {.column width="60%"}
+
+::: {.callout-tip}
+
+## Impose constraints to ensure coherency
+
+Adjust the forecasts to satisfy the constraint
+
+$\text{Visitors}_{T+h|T} = \text{Interstate}_{T+h|T} + \text{International}_{T+h|T}$.
+
+:::
+
+::: {.fragment .fade-in}
+
+::: {.callout-note}
+## Structural representation
+
+Constraints can be represented using matrices:
+
+$$
+\begin{bmatrix}
+  \text{Visitors}_{t} \\
+  \text{Interstate}_{t} \\
+  \text{International}_{t} \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+  1 & 1 \\
+  1 & 0\\
+  0 & 1 \\
+\end{bmatrix}
+\begin{bmatrix}
+  \text{Interstate}_{t} \\
+  \text{International}_{t} \\
+\end{bmatrix}
+$$
+
+or compactly, $\mathbf{y}_t = \mathbf{S} \mathbf{b}_t$
+
+:::
+:::
+
+::: {.fragment .fade-in}
+::: {.callout-paper}
+More information in @hyndman2011.
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/linda-xu-K9NhnXS15ZY-unsplash.jpg){.image-right}
+
+## {}
+### Coherency constraints
+
+::: columns
+::: {.column width="60%"}
+
+::: {.fragment .fade-in}
+
+::: {.callout-note}
+## Zero-constrained representation
+
+Alternatively, the constraints can also be described with
+
+$$
+\begin{bmatrix}
+  1 & -1 & -1 \\
+\end{bmatrix}
+\begin{bmatrix}
+  \text{Visitors}_{t} \\
+  \text{Interstate}_{t} \\
+  \text{International}_{t} \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+0
+\end{bmatrix}
+$$
+
+or compactly, $\mathbf{C}\mathbf{y}_t = \mathbf{0}$.
+
+:::
+:::
+
+::: {.fragment .fade-in}
+::: {.callout-tip}
+It's usually easy to switch between these representations.
+
+Both $\mathbf{C}$ and $\mathbf{S}$ share a common aggregation matrix $\mathbf{A}$.
+
+$$
+\mathbf{S} = \begin{bmatrix}
+\mathbf{A}\\
+\mathbf{I}_{n_b}
+\end{bmatrix},\hspace{2em}
+\mathbf{C} = \begin{bmatrix}
+\mathbf{I}_{n_a} & -\mathbf{A}
+\end{bmatrix}.
+$$
+
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/linda-xu-K9NhnXS15ZY-unsplash.jpg){.image-right}
+
+
+## {.fragment-remove}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Coherency constraints
+
+::: {.callout-important}
+## These representations can't represent all constraints
+
+Hierarchical and grouped constraints work well, since they have single top series and common bottom series.
+:::
+
+::: {.fragment .fade-in}
+::: {.callout-paper}
+## General linearly constrained time series
+
+@girolimetto2023point generalise the zero-constrained representation to support any constraint.
+:::
+:::
+
+::: {.fragment .fade-in}
+::: {.callout-tip}
+## Graph representation of constraints
+
+I propose representing constraints using **directed acyclical graphs** (DAGs) which achieve the same generality with added benefits.
+:::
+:::
+
+
+:::
+:::
+
+![](backgrounds/eilis-garvey-MskbR8VLNrA-unsplash.jpg){.image-left}
+
+## {.fragment-remove}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### General linear constraints
+
+::: {.callout-tip}
+## Generalisation from zero-constrained representation
+
+::: {.fragment .fade-out fragment-index=1}
+Rather than *upper and bottom* series, consider *constrained and unconstrained* series.
+
+![](resources/dani-graph-constraint.png)
+:::
+
+::: {.fragment .fade-up fragment-index=1}
+Similar to $\mathbf{C}$, $\mathbf{\Gamma}$ imposes zero-constraints: $\mathbf{\Gamma}\mathbf{y}_t = \mathbf{0}$.
+
+$$
+\mathbf{\Gamma} = \begin{bmatrix}
+1 & 0 & -1 & -1 & -1 &  0 &  0\\
+1 & 0 &  0 &  0 &  0 & -1 & -1\\
+0 & 1 & -1 & -1 &  0 &  0 &  0\\
+\end{bmatrix}
+$$
+:::
+
+::: {.fragment .fade-up fragment-index=2}
+However the structural representation and aggregation matrix $\mathbf{A}$ is hard to obtain since
+
+$$
+\mathbf{S} = \begin{bmatrix}
+\mathbf{A}\\
+\mathbf{I}_{n_b}
+\end{bmatrix},\hspace{2em}
+\mathbf{\Gamma} \neq \begin{bmatrix}
+\mathbf{I}_{n_a} & -\mathbf{A}
+\end{bmatrix}.
+$$
+:::
+
+::: {.fragment .fade-up fragment-index=3}
+For linear reconciliation, both graph coherence and 'general
+linearly constrained' coherence are equivalent.
+:::
+
+:::
+
+:::
+:::
+
+![](backgrounds/eilis-garvey-MskbR8VLNrA-unsplash.jpg){.image-left}
+
+
+## {.fragment-remove}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### General linear constraints
+
+::: {.callout-tip}
+## Generalisation from zero-constrained representation
+
+::: {.fragment .fade-out fragment-index=1}
+Use standard linear algebra techniques to transform $\mathbf{\Gamma}$ into a full rank matrix $\mathbf{\bar{U}}$ of form of $\mathbf{C}$.
+
+$$
+\mathbf{\Gamma} = \begin{bmatrix}
+1 & 0 & -1 & -1 & -1 &  0 &  0\\
+1 & 0 &  0 &  0 &  0 & -1 & -1\\
+0 & 1 & -1 & -1 &  0 &  0 &  0\\
+\end{bmatrix}
+$$
+Two options are proposed:
+
+* Reduced row echelon form [@meyer2023matrix]
+* QR decomposition [@lyche2020numerical]
+
+:::
+
+::: {.fragment .fade-up fragment-index=1}
+::: {.fragment .fade-out fragment-index=2}
+Applying this technique provides an equivalent matrix from which $\mathbf{A}$ is easily obtained.
+```{r}
+#| include: false
+library(FoReco)
+gamma <- matrix(
+  c(
+    1, 0, -1, -1, -1,  0,  0,
+    1, 0,  0,  0,  0, -1, -1,
+    0, 1, -1, -1,  0,  0,  0
+  ),
+  nrow = 3, byrow = TRUE
+)
+lcmat(gamma)
+```
+
+$$
+\mathbf{\bar{U}} = \left[\begin{array}{ccc:cccc}
+1 & 0 & 0 &  0 &  0 & -1 & -1\\
+0 & 1 & 0 &  0 &  1 & -1 & -1\\
+0 & 0 & 1 &  1 &  1 & -1 & -1\\
+\end{array}\right]
+$$
+:::
+:::
+
+::: {.fragment .fade-up fragment-index=2}
+From which a "structural-like" representation, $\mathbf{y}_t = \mathbf{\bar{S}}\mathbf{b}_t$ can be constructed:
+
+$$
+\mathbf{\bar{S}} = \left[\begin{array}{cccc}
+0 &  0 & -1 & -1\\
+0 &  1 & -1 & -1\\
+1 &  1 & -1 & -1\\\hdashline
+1 & 0 & 0 & 0\\
+0 & 1 & 0 & 0\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1
+\end{array}\right].
+$$
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/eilis-garvey-MskbR8VLNrA-unsplash.jpg){.image-left}
+
+## {.fragment-remove}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Graph constraints
+
+::: {.callout-tip}
+## A novel representation of coherency constraints
+
+Graphs are often used to visualise the constraints...
+
+but can they also be useful in imposing the constraints?
+
+:::
+
+::: {.callout-note}
+## Graphs are used widely in computer science
+
+Representing coherency constraints using graphs would:
+
+* introduce **graph terminology** for navigating structures
+* **simplify** the description of the **coherency constraints**
+* allow representation of **non-linear** relationships
+* **unify tools** for visualisation and reconciliation
+
+:::
+
+:::
+:::
+
+![](backgrounds/eilis-garvey-MskbR8VLNrA-unsplash.jpg){.image-left}
+
+
+## {}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Hierarchical coherence
+
+::: {.callout-note}
+## Each aggregate has a single constraint
+
+The basic constraint shown before is '[**hierarchical**]{.term}'
+
+```{r}
+#| echo: false
+#| output: hide
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Academic", "Industry")),
+  edges = tibble(from = c(1, 1), to = c(2, 3))
+) |>
+  visnetwork_hierarchy(width = 600, height = 300)
+```
+:::
+
+:::
+:::
+
+![](backgrounds/PXL_20230626_200731948.jpg){.image-left}
+
+
+## {}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Hierarchical coherence
+
+::: {.callout-note}
+## Each aggregate has a single constraint
+
+[**Hierarchical**]{.term} series often have multiple layers
+
+```{r}
+#| echo: false
+#| output: hide
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Academic", "Industry", "Students", "Staff")),
+  edges = tibble(from = c(1, 1, 2, 2), to = c(2, 3, 4, 5))
+) |>
+  visnetwork_hierarchy(width = 600, height = 400)
+```
+
+::: {.fragment .fade-in}
+In graph terms, this is known as a [**polytree**]{.term}.
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/PXL_20230626_200731948.jpg){.image-left}
+
+
+## {}
+
+::: columns
+::: {.column width="60%"}
+### Grouped coherence
+
+::: {.callout-note}
+## Considering origin and workplace
+
+Attendance can be disaggregated by both **origin** and **workplace**...
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Domestic", "International")),
+  edges = tibble(from = c(1, 1), to = c(2, 3))
+) |>
+  visnetwork_hierarchy(width = 300, height = 300)
+```
+:::
+::: {.column width="50%"}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Academia", "Industry")),
+  edges = tibble(from = c(1, 1), to = c(2, 3))
+) |>
+  visnetwork_hierarchy(width = 300, height = 300)
+```
+:::
+:::
+:::
+:::
+:::
+
+![](backgrounds/zach-callahan--i51Ke0ROTo-unsplash.jpg){.image-right}
+
+
+
+## {}
+
+::: columns
+::: {.column width="60%"}
+### Grouped coherence
+
+::: {.callout-note}
+## Considering origin and workplace
+
+and then further disaggregated by the other.
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Domestic", "International", "Domestic\n& Academia", "Domestic\n& Industry", "International\n& Academia", "International\n& Industry")),
+  edges = tibble(from = c(1, 1, 2, 2, 3, 3), to = c(2, 3, 4, 5, 6, 7))
+) |>
+  visnetwork_hierarchy(width = 300, height = 400)
+```
+:::
+::: {.column width="50%"}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Academia", "Industry", "Academia\n& Domestic", "Academia\n& International", "Industry\n& Domestic", "Industry\n& International")),
+  edges = tibble(from = c(1, 1, 2, 2, 3, 3), to = c(2, 3, 4, 5, 6, 7))
+) |>
+  visnetwork_hierarchy(width = 300, height = 400)
+```
+:::
+:::
+
+A [**grouped**]{.term} structure has the **same top and bottom series**.
+
+:::
+:::
+:::
+
+![](backgrounds/zach-callahan--i51Ke0ROTo-unsplash.jpg){.image-right}
+
+## {}
+
+::: columns
+::: {.column width="60%"}
+### Grouped coherence
+
+::: {.callout-note}
+## Considering origin and workplace
+
+The [**grouped**]{.term} structure can be plotted in a single graph.
+
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Domestic", "International", "Academia", "Industry", "Domestic\n& Academia", "Domestic\n& Industry", "International\n& Academia", "International\n& Industry")),
+  edges = tibble(
+    from  = c(1, 1, 1, 1, 2, 4, 2, 5, 3, 4, 3, 5), 
+    to    = c(2, 3, 4, 5, 6, 6, 7, 7, 8, 8, 9, 9),
+    color = hcl.colors(3, "Dark2")[c(1,1,2,2,1,2,1,2,1,2,1,2)]
+  )
+) |>
+  visnetwork_graph(width = 600, height = 400)
+```
+
+::: {.fragment .fade-in}
+In graph terms, this is a [**directed acyclical graph**]{.term} (DAG).
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/zach-callahan--i51Ke0ROTo-unsplash.jpg){.image-right}
+
+
+## {}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Temporal coherence
+
+::: {.callout-note}
+A time series can be disaggregated by temporal granularity
+
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Year", "Q1", "Q2", "Q3", "Q4", month.abb)),
+  edges = tibble(from = c(rep(1, 4), rep(2:5, each = 3)), to = c(2:17))
+) |>
+  visnetwork_hierarchy(width = 600, height = 200) |> 
+  visNodes(font = list(size = 40))
+```
+:::
+
+::: {.callout-paper}
+Temporal reconciliation is described in @ATHANASOPOULOS201760.
+:::
+
+::: {.fragment .fade-in}
+::: {.callout-question}
+## What type of coherence structure is this?
+
+::: {.fragment .fade-in}
+This is a [**polytree**]{.term}, so this structure is [**hierarchical**]{.term}.
+:::
+:::
+:::
+:::
+:::
+
+![](backgrounds/courtney-smith-pCLKkPHpCz0-unsplash.jpg){.image-left}
+
+
+## {}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Temporal coherence
+
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Year", "Q1", "Q2", "Q3", "Q4", month.abb)),
+  edges = tibble(from = c(rep(1, 4), rep(2:5, each = 3)), to = c(2:17))
+) |>
+  visnetwork_hierarchy(width = 700, height = 200) |> 
+  visNodes(font = list(size = 40))
+```
+
+
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Year", "Jan-Apr", "May-Aug", "Sep-Dec", month.abb)),
+  edges = tibble(from = c(rep(1, 3), rep(2:4, each = 4)), to = c(2:16))
+) |>
+  visnetwork_hierarchy(width = 700, height = 200) |> 
+  visNodes(font = list(size = 40))
+```
+
+::: {.fragment .fade-in}
+::: {.callout-question}
+## What type of coherence structure is this?
+::: {.fragment .fade-in}
+This structure has the same top and bottom series, so 
+
+temporal coherence is a [**grouped**]{.term} constraint.
+:::
+:::
+:::
+:::
+:::
+
+![](backgrounds/courtney-smith-pCLKkPHpCz0-unsplash.jpg){.image-left}
+
+## {}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Temporal coherence
+
+::: {.callout-tip}
+
+Temporal coherence constraints are [**grouped**]{.term} can also be represented with [**directed acyclical graphs**]{.term} (DAGs).
+
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Year", "Q1", "Q2", "Q3", "Q4", "Jan-Apr", "May-Aug", "Sep-Dec", month.abb)),
+  edges = tibble(
+    from = c(rep(1, 7), rep(2:5, each = 3), rep(6:8, each = 4)), 
+    to = c(2:8, 9:20, 9:20),
+    grp = c(rep(1, 4), rep(2, 3), rep(1, 12), rep(2, 12)),
+    color = hcl.colors(3, "Dark2")[grp]
+  )
+) |>
+  visnetwork_graph(width = 700, height = 500) |> 
+  visNodes(font = list(size = 30))
+```
+:::
+
+:::
+:::
+
+![](backgrounds/courtney-smith-pCLKkPHpCz0-unsplash.jpg){.image-left}
+
+## {.fragment-remove}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Cross-temporal coherence
+
+::: {.callout-note}
+
+Since both [**grouped**]{.term} and [**temporal**]{.term} coherence are DAGs, the interaction between them is a single DAG.
+
+::: {.fragment .fade-out fragment-index=1}
+::: columns
+::: {.column width="50%"}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Year", "Q1", "Q2", "Q3", "Q4", "Jan-Apr", "May-Aug", "Sep-Dec", month.abb)),
+  edges = tibble(
+    from = c(rep(1, 7), rep(2:5, each = 3), rep(6:8, each = 4)), 
+    to = c(2:8, 9:20, 9:20),
+    grp = c(rep(1, 4), rep(2, 3), rep(1, 12), rep(2, 12)),
+    color = hcl.colors(3, "Dark2")[grp]
+  )
+) |>
+  visnetwork_graph(width = 300, height = 300) |> 
+  visNodes(font = list(size = 30))
+```
+:::
+::: {.column width="50%"}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Domestic", "International", "Academia", "Industry", "Domestic\n& Academia", "Domestic\n& Industry", "International\n& Academia", "International\n& Industry")),
+  edges = tibble(
+    from  = c(1, 1, 1, 1, 2, 4, 2, 5, 3, 4, 3, 5), 
+    to    = c(2, 3, 4, 5, 6, 6, 7, 7, 8, 8, 9, 9),
+    color = hcl.colors(4, "Dark2")[c(1,1,2,2,1,2,1,2,1,2,1,2) + 2]
+  )
+) |>
+  visnetwork_graph(width = 300, height = 300)
+```
+:::
+:::
+:::
+
+::: {.fragment .fade-up fragment-index=1}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Domestic", "International", "Academia", "Industry", "Domestic\n& Academia", "Domestic\n& Industry", "International\n& Academia", "International\n& Industry"), image = "resources/temporal-graph-node.png", shape = "image"),
+  edges = tibble(
+    from  = c(1, 1, 1, 1, 2, 4, 2, 5, 3, 4, 3, 5), 
+    to    = c(2, 3, 4, 5, 6, 6, 7, 7, 8, 8, 9, 9),
+    color = hcl.colors(4, "Dark2")[c(1,1,2,2,1,2,1,2,1,2,1,2) + 2]
+  )
+) |>
+  visnetwork_graph(width = 600, height = 400)
+```
+:::
+
+:::
+
+:::
+:::
+
+![](backgrounds/aleksandar-radovanovic-mXKXJI98aTE-unsplash.jpg){.image-left}
+
+## {}
+
+::: columns
+::: {.column width="60%"}
+### Graph coherence
+
+A [**directed acyclical graph**]{.term} does **not** require a common top and bottom series.
+
+<br>
+
+::: {.fragment .fade-in}
+
+What happens if we relax this definition of grouped coherence, and use the more general DAG structure.
+
+::: {.callout-question}
+## Is it reasonable to leverage the full generality of DAGs?
+
+::: {.fragment .fade-in}
+Yes! Let's see why.
+:::
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/eilis-garvey-MskbR8VLNrA-unsplash.jpg){.image-right}
+
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Unbalanced graphs
+
+What if the coherency structure had **different bottom series**?
+
+<br>
+
+This often occurs in these circumstances:
+
+1. Cross-temporal with series observed at **different granularities**.
+2. Multiple **different approaches** to calculating the top series.
+3. Partial coherency by **'trimming' sparse disaggregations**.
+
+:::
+:::
+
+![](backgrounds/oriento--OBffuUekfQ-unsplash.jpg){.image-left}
+
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+
+1. Cross-temporal with series observed at **different granularities**.
+
+::: {.fragment .fade-in}
+
+::: {.callout-tip}
+## Example
+Suppose `Sales` is reported quarterly, but `Profit` and `Costs` twice yearly.
+
+:::{data-id="graphtemp"}
+```{r}
+#| echo: false
+#| output: hide
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Profit (Y)", "Sales (Y)", "-Costs (Y)", "Profit (S1)", "Sales (S1)", "-Costs (S1)", "Profit (S2)", "Sales (S2)", "-Costs (S2)", "Sales (Q1)","Sales (Q2)","Sales (Q3)","Sales (Q4)")),
+  edges = tibble(
+    from  = c(1, 1, 4, 4, 7, 7,    1, 1, 2, 2, 3, 3,   5, 5, 8, 8),
+    to    = c(2, 3, 5, 6, 8, 9,    4, 7, 5, 8, 6, 9,   10, 11, 12, 13),
+    grp   = c(1, 1, 1, 1, 1, 1,    2, 2, 2, 2, 2, 2,   3,  3,  3,  3),
+    color = hcl.colors(3, "Dark2")[grp]
+  )
+) |>
+  visnetwork_graph(width = 600, height = 400) |> 
+  visNodes(font = list(size = 25))
+```
+:::
+:::
+:::
+:::
+:::
+
+![](backgrounds/oriento--OBffuUekfQ-unsplash.jpg){.image-left}
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+
+1. Cross-temporal with series observed at **different granularities**.
+
+::: {.callout-tip}
+## Example
+
+:::{data-id="graphtemp"}
+```{r}
+#| echo: false
+#| output: hide
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Profit (Y)", "Sales (Y)", "-Costs (Y)", "Profit (S1)", "Sales (S1)", "-Costs (S1)", "Profit (S2)", "Sales (S2)", "-Costs (S2)", "Sales (Q1)","Sales (Q2)","Sales (Q3)","Sales (Q4)")),
+  edges = tibble(
+    from  = c(1, 1, 4, 4, 7, 7,    1, 1, 2, 2, 3, 3,   5, 5, 8, 8),
+    to    = c(2, 3, 5, 6, 8, 9,    4, 7, 5, 8, 6, 9,   10, 11, 12, 13),
+    grp   = c(1, 1, 1, 1, 1, 1,    2, 2, 2, 2, 2, 2,   3,  3,  3,  3),
+    color = hcl.colors(3, "Dark2")[grp]
+  )
+) |>
+  visnetwork_graph(width = 600, height = 400) |> 
+  visNodes(font = list(size = 25))
+```
+:::
+This allows the higher frequency `Sales` data to be used with the less frequent `Profit` and `Costs` data!
+:::
+:::
+:::
+
+![](backgrounds/oriento--OBffuUekfQ-unsplash.jpg){.image-left}
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+
+2. Multiple **different approaches** to calculating the top series.
+
+::: {.fragment .fade-in}
+::: {.callout-tip}
+## Example
+
+Australian GDP is calculated with 3 approaches:
+
+* Income approach (I)
+* Expenditure approach (E)
+* Production approach (P)
+
+For simplicity consider a small part of these graphs. The complete graph structure has many more disaggregates.
+
+:::
+
+::: {.callout-paper}
+This example is used in @Athanasopoulos2020.
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/oriento--OBffuUekfQ-unsplash.jpg){.image-left}
+
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+
+2. Multiple **different approaches** to calculating the top series.
+
+::: {.callout-tip}
+
+* Income approach (I)
+
+```{r}
+aus_expenditure_struct <- tribble(
+  ~ code, ~ parent,
+  "GDP", NA,
+  c("Statistical\nDiscrepancy (I)", "Income", "Taxes"), "GDP"
+) |> 
+  tidyr::unchop(code)
+aus_expenditure_graph <- tidygraph::tbl_graph(
+  nodes = aus_expenditure_struct |> 
+    transmute(label = code),
+  edges = aus_expenditure_struct |> 
+    mutate(across(everything(), ~ match(., code))) |> 
+    filter(!is.na(parent)) |> 
+    rename(from = parent, to = code)
+)
+visnetwork_hierarchy(aus_expenditure_graph, width = 600, height = 200)
+```
+
+* Expenditure approach (E)
+
+```{r}
+aus_expenditure_struct <- tribble(
+  ~ code, ~ parent,
+  "GDP", NA,
+  c("Statistical\nDiscrepancy (E)", "-Imports", "Exports", "Expenses"), "GDP"
+) |> 
+  tidyr::unchop(code)
+aus_expenditure_graph <- tidygraph::tbl_graph(
+  nodes = aus_expenditure_struct |> 
+    transmute(label = code),
+  edges = aus_expenditure_struct |> 
+    mutate(across(everything(), ~ match(., code))) |> 
+    filter(!is.na(parent)) |> 
+    rename(from = parent, to = code)
+)
+visnetwork_hierarchy(aus_expenditure_graph, width = 600, height = 200)
+```
+
+
+:::
+:::
+:::
+
+![](backgrounds/oriento--OBffuUekfQ-unsplash.jpg){.image-left}
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+
+2. Multiple **different approaches** to calculating the top series.
+
+::: {.callout-tip}
+
+* Combined approach (I & E)
+
+```{r}
+aus_expenditure_struct <- tribble(
+  ~ code, ~ parent,
+  "GDP", NA,
+  c("Statistical\nDiscrepancy (I)", "Income", "Taxes", "Statistical\nDiscrepancy (E)", "-Imports", "Exports", "Expenses"), "GDP"
+) |> 
+  tidyr::unchop(code)
+aus_expenditure_graph <- tidygraph::tbl_graph(
+  nodes = aus_expenditure_struct |> 
+    transmute(label = code),
+  edges = aus_expenditure_struct |> 
+    mutate(across(everything(), ~ match(., code))) |> 
+    filter(!is.na(parent)) |> 
+    rename(from = parent, to = code) |> 
+    mutate(color = hcl.colors(3, "Dark2")[c(rep(1, 3), rep(2, 4))])
+)
+visnetwork_graph(aus_expenditure_graph, width = 600, height = 400)
+```
+
+:::
+:::
+:::
+
+![](backgrounds/oriento--OBffuUekfQ-unsplash.jpg){.image-left}
+
+
+## {.fragment-remove auto-animate=true}
+
+::: columns
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+
+3. Partial coherency by **'trimming' sparse disaggregations**.
+
+::: {.callout-tip}
+
+If the bottom level is too sparse, it is **more complicated** to model and reconciliation can **worsen forecast accuracy**.
+
+<!-- Graph coherency allows us to ignore our problems (reconciling count data models) by trimming the leaf nodes of the graph. -->
+
+:::{.fragment .fade-out fragment-index=1}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Domestic", "International", "Academia", "Industry", "Domestic\n& Academia", "Domestic\n& Industry", "International\n& Academia", "International\n& Industry")),
+  edges = tibble(
+    from  = c(1, 1, 1, 1, 2, 4, 2, 5, 3, 4, 3, 5), 
+    to    = c(2, 3, 4, 5, 6, 6, 7, 7, 8, 8, 9, 9),
+    color = hcl.colors(3, "Dark2")[c(1,1,2,2,1,2,1,2,1,2,1,2)]
+  )
+) |>
+  visnetwork_graph(width = 600, height = 400)
+```
+:::
+
+:::{.fragment .fade-up fragment-index=1}
+```{r}
+tidygraph::tbl_graph(
+  nodes = tibble(label = c("Attendees", "Domestic", "International", "Academia", "Industry")),
+  edges = tibble(
+    from  = c(1, 1, 1, 1), 
+    to    = c(2, 3, 4, 5),
+    color = hcl.colors(3, "Dark2")[c(1,1,2,2)]
+  )
+) |>
+  visnetwork_graph(width = 600, height = 400)
+```
+:::
+
+:::
+:::
+:::
+
+![](backgrounds/oriento--OBffuUekfQ-unsplash.jpg){.image-left}
+
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="60%"}
+### Incomplete graphs
+
+What if the coherency structure doesn't completely aggregate, so that there are **multiple top series**.
+
+<br>
+
+::: {.fragment .fade-in}
+This can occur for many reasons:
+
+1. Cross-validation with reconciliation
+2. Partial/local coherency <br>(e.g. not including worldwide total)
+:::
+
+:::
+:::
+
+![](backgrounds/firosnv-photography-Rr3B0LH7W3k-unsplash.jpg){.image-right}
+
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="60%"}
+
+1. Cross-validation with reconciliation
+
+::: {.callout-tip}
+It makes no sense to aggregate folds of cross-validation.
+
+::: {.fragment .fade-in}
+
+A suitable DAG for cross-validated hierarchies is 
+
+```{r}
+#| echo: false
+#| output: hide
+tidygraph::tbl_graph(
+  nodes = tibble(label = paste0(c("Attendees", "Academic", "Industry"), "\n(fold ", rep(1:3, each = 3), ")")),
+  edges = tibble(from = c(1, 1, 4, 4, 7, 7), to = c(2, 3, 5, 6, 8, 9))
+) |>
+  visnetwork_graph(width = 600, height = 400)
+```
+
+:::
+
+::: {.fragment .fade-in}
+Each disjoint graph can be reconciled separately.
+:::
+
+:::
+
+:::
+:::
+
+![](backgrounds/firosnv-photography-Rr3B0LH7W3k-unsplash.jpg){.image-right}
+
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="60%"}
+
+2. Partial/local coherency
+
+::: {.callout-tip}
+
+## Graph without a common top series
+
+```{r}
+#| echo: false
+#| output: hide
+tidygraph::tbl_graph(
+  nodes = tibble(
+    label = c("Facebook", "Instagram", "WhatsApp", "Messenger", "Oculus", "", "", "", "", ""),
+    shape = c(rep("triangle", 5), rep("circle", 5))),
+  edges = tibble(from = c(1,1,1,  2,2,  3,3, 4,4, 5), to = c(6,7,8,  9,10,  6,7,  8,9,  10))
+) |>
+  visnetwork_graph(layout = "layout_in_circle", width = 600, height = 400)
+```
+
+
+:::
+
+:::
+:::
+
+![](backgrounds/PXL_20230908_083157452.jpg){.image-right}
+
+## {auto-animate=true}
+
+::: columns
+::: {.column width="60%"}
+
+2. Partial/local coherency
+
+::: {.callout-tip}
+
+## Adding Meta as the single parent results in a hierarchy
+
+```{r}
+#| echo: false
+#| output: hide
+tidygraph::tbl_graph(
+  nodes = tibble(
+    label = c("Facebook", "Instagram", "WhatsApp", "Messenger", "Oculus", "", "", "", "", "", "Meta"),
+    shape = c(rep("triangle", 5), rep("circle", 5), "star")),
+  edges = tibble(from = c(1,1,1,  2,2,  3,3, 4,4, 5, rep(11, 5)), to = c(6,7,8,  9,10,  6,7,  8,9,  10, 1:5))
+) |>
+  visnetwork_graph(width = 600, height = 400)
+```
+
+*Note that this isn't a polytree, due to common/shared leafs.*
+
+:::
+
+:::
+:::
+
+![](backgrounds/PXL_20230908_083157452.jpg){.image-right}
+
+
+## {.fragment-remove}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+::: {.column width="60%"}
+### Implementation in fable
+
+Graph structures are embedded within tsibble keys using `graphvec` classes.
+
+
+::: {.fragment .fade-out fragment-index=3}
+::: {.callout-tip}
+## Useful functions
+
+* Create aggregates from bottom series with `aggregate_key()` <br> (and someday `aggregate_index()` for temporal)
+* [Or get artisanal with `agg_vec()` and `graph_vec()` for complex aggregation structures and graphs.]{.fragment fragment-index=1}
+* [Add coherency constraints to models/forecasts with `reconcile()` and `min_trace()`]{.fragment fragment-index=2}
+
+:::
+
+:::
+
+::: {.fragment .fade-up fragment-index=3}
+::: {.callout-paper}
+## Succinctly describe constraints with symbolic language
+
+Similar to modelling interactions in R [@rcore], common aggregation structures are described with symbolic language [@wilkinson1973symbolic].
+:::
+:::
+
+::: {.fragment .fade-up fragment-index=4}
+::: {.callout-tip}
+## Enhanced functionality
+
+* Tools for identifying sub-graphs for exploring series
+* [Tools for changing the graph without removing data]{.fragment fragment-index=5}
+* [Tools for validating operations which change the graph]{.fragment fragment-index=6}
+
+:::
+:::
+
+:::
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+options(width = 56, pillar.print_max = 50)
+```
+
+
+```{r}
+#| echo: true
+library(tsibble)
+library(fable)
+tourism
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    Purpose * (State / Region),
+    Trips = sum(Trips)
+  )
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    Purpose * (State / Region),
+    Trips = sum(Trips)
+  ) |> 
+  key_data()
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    Purpose * State,
+    Trips = sum(Trips)
+  ) |>  
+  key_data()
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    Purpose : State,
+    Trips = sum(Trips)
+  ) |> 
+  key_data()
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    Purpose + State,
+    Trips = sum(Trips)
+  ) |> 
+  key_data()
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    0 + Purpose + State,
+    Trips = sum(Trips)
+  ) |> 
+  key_data()
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    Purpose,
+    Trips = sum(Trips)
+  ) |> 
+  stretch_tsibble(.step = 4, .init = 60) |> 
+  key_data()
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+
+
+```{r}
+#| echo: true
+tourism |> 
+  aggregate_key(
+    Purpose,
+    Trips = sum(Trips)
+  ) |> 
+  stretch_tsibble(.step = 4, .init = 60) |> 
+  model(ets = ETS(Trips)) |> 
+  reconcile(ets_coherent = min_trace(ets)) |> 
+  forecast(h = "1 year")
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+
+## {auto-animate=TRUE}
+
+::: columns
+
+::: {.column width="40%"}
+:::
+
+::: {.column width="60%"}
+### Examples with fable
+
+```{r}
+#| fig.height: 9
+tourism_agg <- tourism |> 
+  aggregate_key(
+    Purpose,
+    Trips = sum(Trips)
+  )
+tourism_agg |> 
+  stretch_tsibble(.step = 4, .init = 60) |> 
+  model(ets = ETS(Trips)) |> 
+  reconcile(ets_coherent = min_trace(ets)) |> 
+  forecast(h = "1 year") |> 
+  as_fable(key = c(Purpose, .model)) |> 
+  autoplot(tourism_agg) + 
+  geom_vline(xintercept = as.Date(yearquarter(as.character(2013:2018))), linetype = "dashed", colour = "grey60") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+
+:::
+
+
+:::
+
+![](backgrounds/sander-weeteling-KABfjuSOx74-unsplash.jpg){.image-left}
+
+
+## {.fragment-remove}
+
+::: columns
+::: {.column width="60%"}
+### Recap
+
+::: {.callout-note}
+
+## Coherence and graph theory
+
+* [**Hierarchical**]{.term} coherence is a [**polytree**]{.term}.
+* [**Grouped**]{.term} coherence is a *restricted* [**DAG**]{.term}.
+* [**Graph**]{.term} coherence is an *unrestricted* [**DAG**]{.term}.
+
+DAGs are a useful tool for representing structured time series and producing coherent forecasts.
+
+:::
+
+::: {.fragment .fade-in}
+
+![](resources/set.svg){fig-align="center"}
+:::
+
+:::
+:::
+
+![](backgrounds/meric-dagli-7NBO76G5JsE-unsplash.jpg){.image-right}
+
+## {}
+
+### What else?
+
+::: columns
+::: {.column width="60%"}
+
+::: {.callout-tip}
+
+## Other benefits
+
+1. Access to efficient graph algorithms and ideas
+2. Exploration and description of structured time series
+3. Familiar computing grammar for coherent data
+
+:::
+
+::: {.callout-paper}
+
+## Future work
+
+1. Explore automatic processes for reducing the size of the graph to reduce complexity and improve accuracy
+2. Investigate alternative graph reconciliation methods (non-linear constraints, faster at-scale reconciliation)
+
+:::
+:::
+:::
+
+![](backgrounds/meric-dagli-7NBO76G5JsE-unsplash.jpg){.image-right}
+
+
+## {.fragment-remove}
+
+### PhD progression
+
+  <!-- ~ Chapter, ~ `Estimated completion`, ~ Task, ~ Progress, -->
+  <!-- "Topic 1: Reconciliation of structured time series forecasts with graphs", "June 2023", "Theory development", "100%", -->
+  <!-- "Topic 1: Reconciliation of structured time series forecasts with graphs", "June 2023", "ISF2023 Presentation", "100%", -->
+  <!-- "Topic 1: Reconciliation of structured time series forecasts with graphs", "February 2024", "Software development", "90%*", -->
+  <!-- "Topic 1: Reconciliation of structured time series forecasts with graphs", "March 2024", "Paper submission", "75%", -->
+  <!-- "Topic 2: Feature based graph pruning for improved forecast reconciliation", "May 2024", "Theory development", "60%", -->
+  <!-- "Topic 2: Feature based graph pruning for improved forecast reconciliation", "June 2024", "ISF2024 Presentation", "0%", -->
+  <!-- "Topic 2: Feature based graph pruning for improved forecast reconciliation", "June 2024", "Software development", "20%*", -->
+  <!-- "Topic 2: Feature based graph pruning for improved forecast reconciliation", "August 2024", "Paper submission", "0%", -->
+  <!-- "Topic 3: Statistical computing with vectorised operations on distributions", "April 2024", "Theory development", "90%", -->
+  <!-- "Topic 3: Statistical computing with vectorised operations on distributions", "July 2024", "useR! Presentation", "0%", -->
+  <!-- "Topic 3: Statistical computing with vectorised operations on distributions", "July 2024", "Software development", "80%*", -->
+  <!-- "Topic 3: Statistical computing with vectorised operations on distributions", "November 2024", "Paper submission", "0%", -->
+  <!-- "Topic 4: Reconciling mixed temporal granularities", "February 2025", "Theory development", "20%", -->
+  <!-- "Topic 4: Reconciling mixed temporal granularities", "June 2025", "ISF2025 Presentation", "0%", -->
+  <!-- "Topic 4: Reconciling mixed temporal granularities", "June 2025", "Software development", "10%*", -->
+  <!-- "Topic 4: Reconciling mixed temporal granularities", "August 2025", "Paper submission", "0%", -->
+  <!-- "Topic 5: Probabilistic forecasting at scale using tidy data structures", "December 2025", "Theory development", "75%", -->
+  <!-- "Topic 5: Probabilistic forecasting at scale using tidy data structures", "March 2026", "Software development", "60%*", -->
+  <!-- # "Topic 5: Probabilistic forecasting at scale using tidy data structures", "March 2026", "Paper submission", "0%", -->
+  <!-- "PhD Milestones", "February 2024", "Confirmation", "100%", -->
+  <!-- "PhD Milestones", "February 2025", "Mid-candidature review", "0%", -->
+  <!-- "PhD Milestones", "February 2026", "Final review", "0%", -->
+
+::: columns
+::: {.column width="60%"}
+
+::: {.container .fragment .fade-up fragment-index=1}
+::: {.timeline .timeline-left style="height: 720px;"}
+
+
+
+::: {.timeline-block}
+::: {.timeline-icon}
+![](resources/temporal-graph-node.png)
+:::
+::: {.timeline-content}
+**Idea of graph coherency constraints**
+
+::: {.timeline-details .fragment .fade-out fragment-index=2}
+
+Working on improving reconciliation for fable, I set out to find a more general framework for representing coherency constraints.
+
+:::
+::: {.timeline-date}
+Mar 2023
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=2}
+::: {.timeline-icon}
+![](resources/isf2023.png)
+:::
+::: {.timeline-content}
+**Presented graph coherency at ISF 2023**
+
+::: {.timeline-details .fragment .fade-out fragment-index=3}
+Received great support and useful feedback from attendees.
+
+Awarded with a best student presentation award for the work, provided by Elsevier.
+:::
+::: {.timeline-date}
+Jun 2023
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=3}
+::: {.timeline-icon}
+![](resources/monash.png)
+:::
+::: {.timeline-content}
+**Completed the coursework :mortar_board:**
+
+::: {.timeline-details .fragment .fade-out fragment-index=4}
+Passed all coursework :tada:
+
+Now to focus on the research!
+:::
+::: {.timeline-date}
+Nov 2023
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=4}
+::: {.timeline-icon}
+![](resources/graphvec.svg)
+:::
+::: {.timeline-content}
+**Created the graphvec package**
+
+::: {.timeline-details .fragment .fade-out fragment-index=5}
+Split out `agg_vec()` from fabletools, and extended support with `graph_vec()` and developed tools for multi-column graphs in tidy data frames.
+
+:::
+::: {.timeline-date}
+Dec 2023
+:::
+:::
+:::
+
+::: {.timeline-block .fragment .fade-up fragment-index=5}
+::: {.timeline-icon}
+![](resources/memo.png)
+:::
+::: {.timeline-content}
+**Draft of graph coherency paper**
+
+::: {.timeline-details .fragment .fade-out fragment-index=6}
+Paper is well structured and has a clear path toward completion. Some more work on applications with stronger motivating examples is needed.
+:::
+::: {.timeline-date}
+Feb 2024
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=6}
+::: {.timeline-icon}
+![](resources/monash.png)
+:::
+::: {.timeline-content}
+**Confirmation report and presentation**
+
+::: {.timeline-details}
+
+:::
+::: {.timeline-date}
+Feb 2024
+:::
+:::
+:::
+
+
+
+:::
+:::
+
+
+:::
+:::
+
+![](backgrounds/estee-janssens-zni0zgb3bkQ-unsplash.jpg){.image-right}
+
+
+## {.fragment-remove}
+
+### PhD timeline (2024)
+
+  <!-- "Topic 5: Probabilistic forecasting at scale using tidy data structures", "December 2025", "Theory development", "75%", -->
+  <!-- "Topic 5: Probabilistic forecasting at scale using tidy data structures", "March 2026", "Software development", "60%*", -->
+  <!-- # "Topic 5: Probabilistic forecasting at scale using tidy data structures", "March 2026", "Paper submission", "0%", -->
+  <!-- "PhD Milestones", "February 2024", "Confirmation", "100%", -->
+  <!-- "PhD Milestones", "February 2025", "Mid-candidature review", "0%", -->
+  <!-- "PhD Milestones", "February 2026", "Final review", "0%", -->
+
+::: columns
+::: {.column width="60%"}
+
+::: {.container .fragment .fade-up fragment-index=1}
+::: {.timeline .timeline-left style="height: 720px;"}
+
+
+
+::: {.timeline-block}
+::: {.timeline-icon}
+![](resources/vacation.png)
+:::
+::: {.timeline-content}
+**Have a break!**
+
+::: {.timeline-details .fragment .fade-out fragment-index=2}
+
+On leave for two weeks in China :cold_face:
+
+Happy new year! :dragon:
+
+:::
+::: {.timeline-date}
+Feb 2024
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=2}
+::: {.timeline-icon}
+![](resources/temporal-graph-node.png)
+:::
+::: {.timeline-content}
+**Complete graph coherency paper**
+
+::: {.timeline-details .fragment .fade-out fragment-index=3}
+Write, write, write.
+:::
+::: {.timeline-date}
+Apr 2024
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=3}
+::: {.timeline-icon}
+![](resources/scissors.png)
+:::
+::: {.timeline-content}
+**Feature based graph pruning**
+
+::: {.timeline-details .fragment .fade-out fragment-index=4}
+Develop a technique for pruning low-signal time series from a coherent graph structure to reduce complexity and increase forecasting performance.
+:::
+::: {.timeline-date}
+May 2024
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=4}
+::: {.timeline-icon}
+![](resources/iif.png)
+:::
+::: {.timeline-content}
+**Presentation at ISF 2024**
+
+::: {.timeline-details .fragment .fade-out fragment-index=5}
+Present about pruning coherent time series.
+
+:::
+::: {.timeline-date}
+June 2024
+:::
+:::
+:::
+
+::: {.timeline-block .fragment .fade-up fragment-index=5}
+::: {.timeline-icon}
+![](resources/useR.png)
+:::
+::: {.timeline-content}
+**Presentation at useR! 2024**
+
+::: {.timeline-details .fragment .fade-out fragment-index=6}
+Presentation about the distributional package, which is the foundation for representing probabilistic forecasts in fable.
+:::
+::: {.timeline-date}
+July 2024
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=6}
+::: {.timeline-icon}
+![](resources/monash.png)
+:::
+::: {.timeline-content}
+**Mid-candidature review and presentation**
+
+::: {.timeline-details}
+
+:::
+::: {.timeline-date}
+Feb 2025
+:::
+:::
+:::
+
+
+
+:::
+:::
+
+
+:::
+:::
+
+![](backgrounds/estee-janssens-zni0zgb3bkQ-unsplash.jpg){.image-right}
+
+## {.fragment-remove}
+
+### PhD timeline (2025)
+
+  <!-- "Topic 5: Probabilistic forecasting at scale using tidy data structures", "December 2025", "Theory development", "75%", -->
+  <!-- "Topic 5: Probabilistic forecasting at scale using tidy data structures", "March 2026", "Software development", "60%*", -->
+  <!-- # "Topic 5: Probabilistic forecasting at scale using tidy data structures", "March 2026", "Paper submission", "0%", -->
+  <!-- "PhD Milestones", "February 2024", "Confirmation", "100%", -->
+  <!-- "PhD Milestones", "February 2025", "Mid-candidature review", "0%", -->
+  <!-- "PhD Milestones", "February 2026", "Final review", "0%", -->
+
+::: columns
+::: {.column width="60%"}
+
+::: {.container .fragment .fade-up fragment-index=1}
+::: {.timeline .timeline-left style="height: 720px;"}
+
+
+
+::: {.timeline-block}
+::: {.timeline-icon}
+![](resources/memo.png)
+:::
+::: {.timeline-content}
+**Finish graph pruning and distribution papers**
+
+::: {.timeline-details .fragment .fade-out fragment-index=2}
+
+Write more, write more, write more...
+
+:::
+::: {.timeline-date}
+Feb 2025
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=2}
+::: {.timeline-icon}
+![](resources/clock.png)
+:::
+::: {.timeline-content}
+**Mixed temporal granularity vectors**
+  
+::: {.timeline-details .fragment .fade-out fragment-index=4}
+Designing a framework for representing temporal moments, intervals, and granularities.
+:::
+::: {.timeline-date}
+Apr 2025
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=4}
+::: {.timeline-icon}
+![](resources/iif.png)
+:::
+::: {.timeline-content}
+**Presentation at ISF 2025**
+
+::: {.timeline-details .fragment .fade-out fragment-index=5}
+About mixed temporal granularity forecasting and reconciliation with fable.
+
+:::
+::: {.timeline-date}
+Jun 2025
+:::
+:::
+:::
+
+::: {.timeline-block .fragment .fade-up fragment-index=5}
+::: {.timeline-icon}
+![](resources/fable.png)
+:::
+::: {.timeline-content}
+**Formalise the design of fable**
+
+::: {.timeline-details .fragment .fade-out fragment-index=6}
+Incorporate the foundations developed in the research above to enhance the design of tidy forecasting with fable.
+:::
+::: {.timeline-date}
+Dec 2025
+:::
+:::
+:::
+
+
+
+::: {.timeline-block .fragment .fade-up fragment-index=6}
+::: {.timeline-icon}
+![](resources/monash.png)
+:::
+::: {.timeline-content}
+**Final review and presentation**
+
+::: {.timeline-details}
+
+:::
+::: {.timeline-date}
+Feb 2026
+:::
+:::
+:::
+
+
+:::
+:::
+
+
+:::
+:::
+
+![](backgrounds/estee-janssens-zni0zgb3bkQ-unsplash.jpg){.image-right}
+
+
+## Thanks for your time!
+
+::: columns
+::: {.column width="60%"}
+
+::: {.callout-tip}
+## Final remarks
+
+* I'm trying to build a user-friendly design framework for forecast reconciliation, and it's uncovered lots of potential directions for future research.
+* Next focus is mixed temporal granularities, which works well in the graph framework.
+* Graphs provide a useful representation for all coherency constraints, including non-linear structures.
+:::
+
+::: {.callout-link}
+
+## Useful links
+
+![](resources/forum.svg){.icon} [social.mitchelloharawild.com](https://social.mitchelloharawild.com/)
+
+![](resources/projector-screen-outline.svg){.icon} [slides.mitchelloharawild.com/phd-confirmation](https://slides.mitchelloharawild.com/phd-confirmation)
+
+![](resources/github.svg){.icon} [mitchelloharawild/phd-confirmation](https://github.com/mitchelloharawild/phd-confirmation)
+
+:::
+
+:::
+:::
+
+![](backgrounds/meric-dagli-7NBO76G5JsE-unsplash.jpg){.image-right}
+
+
+<!-- ## {} -->
+
+<!-- ::: columns -->
+<!-- ::: {.column width="40%"} -->
+<!-- ::: -->
+<!-- ::: {.column width="60%"} -->
+<!-- ### Visualising structured time series -->
+<!-- ::: -->
+<!-- ::: -->
+
+<!-- ![](backgrounds/yoksel-zok-aEMEMsBNqeo-unsplash.jpg){.image-left} -->
+
+
+## Unsplash credits
+
+::: {.callout-unsplash}
+
+## Thanks to these Unsplash contributors for their photos
+
+```{r unsplash}
+#| echo: FALSE
+#| cache: TRUE
+library(httr)
+library(purrr)
+unsplash_pattern <- ".*-(.{11})-unsplash\\.jpg$"
+images <- list.files("backgrounds/", pattern = unsplash_pattern)
+ids <- sub(unsplash_pattern, "\\1", images)
+
+get_unsplash_credit <- function(id) {
+  unsplash_url <- "https://api.unsplash.com/" 
+  my_response <- httr::GET(unsplash_url, path = c("photos", id), query = list(client_id=Sys.getenv("UNSPLASH_ACCESS")))
+  xml <- content(my_response)
+  
+  name <- xml$user$name
+  desc <- xml$description%||%"Photo"
+  sprintf(
+    "* %s: [%s%s](%s)",
+    name,
+    strtrim(desc,60-nchar(name)),
+    if(nchar(desc)>(60-nchar(name))) "..." else "",
+    modify_url("https://unsplash.com/", path = file.path("photos", xml$id))
+  )
+}
+htmltools::includeMarkdown(paste0(map_chr(ids, get_unsplash_credit), collapse = "\n"))
+```
+
+:::
+
+## References
